@@ -123,10 +123,13 @@ int main()
         }
         }
         */
+        previous_opcode = opcode;
         doOpcode();
+        handleInterupts();
         // Note:  Remove these printf statments to speed up emulation
         if (advanced_debugging_enabled == true)
         {
+        printf("\nOpcode: 0x%X", opcode);
         printf("\nA_flag: 0x%X", af[0]);
         printf("\nF_flag: 0x%X", af[1]);
         printf("\nB_flag: 0x%X", bc[0]);
@@ -136,6 +139,8 @@ int main()
         printf("\nH_flag: 0x%X", hl[0]);
         printf("\nL_flag: 0x%X", hl[1]);
         printf("\nPC_flag: 0x%X", pc);
+        printf("\nContinue? (Y or N):");
+        cin>>choice;
         }
         //}
         while( SDL_PollEvent( &SDL_EVENT_HANDLING))

@@ -217,6 +217,29 @@ pc++;
 cycles += 4;
 break;
 
+case 0xB1:
+if(bc[1] > af[0])
+{
+af[0] = bc[1];
+goto done0xB1;
+}
+if(bc[1] < af[0])
+{
+af[0] = af[0];
+}
+done0xB1:
+if(af[0] == 0x00)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x00)
+{
+af[1] = 0x00;
+}
+cycles += 4;
+pc++;
+break;
+
 case 0xC3:
 opnn[0] = memory[pc + 2];
 opnn[1] = memory[pc + 1];
@@ -225,13 +248,36 @@ pc = nn;
 cycles += 4;
 break;
 
+case 0xC9:
+nn = sp[0] << 8 | sp[1];
+help0xC92 = memory[nn - 0xFFFF0000];
+help0xC9 = memory[(nn - 0xFFFF0000) + 1];
+pc = help0xC9 << 8 | help0xC92;
+sp[1] += 0x02;
+if(sp[1] == 0x00 || sp[1] == 0x01)
+{
+sp[0] += 0x01;
+}
+cycles += 8;
+debugging_enabled = true;
+break;
+
 case 0xCD:
-sp[0] = (pc + 3) >> 8;
-sp[1] = (pc + 3);
+help0xCD3 = sp[0];
+nn = help0xCD3 << 8 | sp[1];
+help0xCD = (pc + 0x3) >> 8;
+help0xCD2 = (pc + 0x3);
+memory[(nn - 0xFFFF0000) - 0x02] = help0xCD2;
+memory[(nn - 0xFFFF0000) - 0x01] = help0xCD;
 opnn[0] = memory[pc + 2];
 opnn[1] = memory[pc + 1];
 nn = opnn[0] << 8 | opnn[1];
 pc = nn;
+sp[1] -= 0x02;
+if(sp[1] == 0xFF || sp[1] == 0xFE)
+{
+sp[0] -= 0x01;
+}
 cycles += 12;
 break;
 
@@ -276,7 +322,14 @@ pc += 2;
 cycles += 12;
 break;
 
-case 0xF3:
+case 0xF3: // di (no point in implementing yet because interupts aren't implemented)
+ime = false;
+cycles += 4;
+pc++;
+break;
+
+case 0xFB: // ei (no point in implementing yet because interupts aren't implemented)
+ime = true;
 cycles += 4;
 pc++;
 break;

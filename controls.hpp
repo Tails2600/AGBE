@@ -1,5 +1,5 @@
 #include <SDL2/SDL.h>
-#include "include.hpp"
+#include "interupts.hpp"
 SDL_Event SDL_EVENT_HANDLING;
 SDL_Window* AGBE_window = NULL;
 SDL_Surface* screenSurface = NULL;

@@ -38,6 +38,7 @@
 		<Unit filename="controls.hpp" />
 		<Unit filename="cpu.h" />
 		<Unit filename="include.hpp" />
+		<Unit filename="interupts.hpp" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />
