@@ -125,6 +125,7 @@ int main()
         */
         previous_opcode = opcode;
         doOpcode();
+
         handleInterupts();
         // Note:  Remove these printf statments to speed up emulation
         if (advanced_debugging_enabled == true)

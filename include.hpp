@@ -1,4 +1,4 @@
-
+#include <bits/stdc++.h>
 char memory[0x10000];
 // Registers and Flags
 int16_t pc = 0x100;
@@ -60,3 +60,11 @@ int8_t help0xCD2;
 int8_t help0xCD3;
 int8_t help0xC9;
 int8_t help0xC92;
+// These variables will help with handleInterupts() and overall Interupt Handling
+std::bitset<1> FF0F_Interupt_Value;
+int VBlank_Timer = 32860;
+int helpEI;
+std::bitset<1> bin_value_1 = 1;
+std::bitset<1> bin_value_0 = 0;
+bool VBlank_Interupt_Needs_Done;
+std::bitset<8> FF0F_Interupt_Value2;

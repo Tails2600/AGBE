@@ -259,7 +259,6 @@ if(sp[1] == 0x00 || sp[1] == 0x01)
 sp[0] += 0x01;
 }
 cycles += 8;
-debugging_enabled = true;
 break;
 
 case 0xCD:
@@ -330,6 +329,10 @@ break;
 
 case 0xFB: // ei (no point in implementing yet because interupts aren't implemented)
 ime = true;
+if (memory[0xFF0F] != 0x00)
+{
+helpEI = 1;
+}
 cycles += 4;
 pc++;
 break;
@@ -353,6 +356,7 @@ default:
 printf("\nAn error has Occured\nUnknown Opcode: 0x%X", opcode);
 printf("\nProgram Counter: 0x%X\n", pc);
 printf("Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
+printf("Cycles: %i\n", cycles);
 printf("Please see errorlog.txt for more details.\n");
 printf("Please see memdump for a full GB mem dump.\n");
 //window.close();
