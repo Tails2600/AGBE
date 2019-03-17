@@ -16,119 +16,88 @@ int main()
     screenSurface = SDL_GetWindowSurface( AGBE_window );
     SDL_Renderer* renderer;
     SDL_Texture* const texture = ::SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,SDL_TEXTUREACCESS_STREAMING, 160, 144);
-    //window.setFramerateLimit(60);
-    char filename[20];
+    char filename[50];
     cout<<"Welcome to AGBE!"<<endl<<"Enter Rom Name: ";
     cin>>filename;
-
     cout<<"Loading "<<filename<<" please wait..."<<endl;
-
     FILE* rom = fopen(filename, "rb");
         if (rom == NULL){
             std::cerr<<"Failed to open ROM"<<std::endl;
             return false;
         }
-    //std::cerr<<"Rom successfully opened."<<std::endl;
-
     fseek(rom, 0, SEEK_END);
     long rom_size = ftell(rom);
     rewind(rom);
-    //std::cerr<<"End of Rom Successfully found."<<std::endl;
-
     char* rom_buffer = (char*) malloc(sizeof(char) * rom_size);
         if (rom_buffer == NULL){
             std::cerr<<"Failed to allocate memory for ROM"<<std::endl;
             return false;
         }
-    //std::cerr<<"Memory for rom was successfully allocated."<<std::endl;
-
     size_t result = fread(rom_buffer, sizeof(char), (size_t)rom_size, rom);
         if(result != rom_size){
         std::cerr<<"Failed to Read Rom"<<std::endl;
         return false;
         }
-    //std::cerr<<"Rom successfully read."<<std::endl;
-
     if ((32769) > rom_size){
             std::cerr<<"Loading Rom into memory"<<std::endl;
             for (int i = 0; i < rom_size; ++i) {
-                memory[i + 0] = (uint8_t)rom_buffer[i];   // Load into memory starting
-                                                        // at 0x0000 (=0)
-                //printf("Rom byte %i successsfully loaded into memory\n", i);
+                memory[i + 0] = (uint8_t)rom_buffer[i];   // Load into memory starting at 0x0000
             }
         }
     else {
         std::cerr << "ROM too large to fit in memory" << std::endl;
         return false;
     }
-
     fclose(rom);
-    //std::cerr<<"Rom successfully closed."<<std::endl;
     free(rom_buffer);
-    //std::cerr<<"Rom Buffer successfully freed"<<std::endl;
     std::cerr<<filename<<" was successfully loaded."<<std::endl;
-    char optionslol;
     cout<<"Do you want Debugging printf statements? (y = yes, n = no): ";
-    cin>>optionslol;
-    if (optionslol == 'n')
+    cin>>choice;
+    if (choice == 'n')
     {
     debugging_enabled = false;
-    goto donewithoptions;
+    goto donewithoptions1;
     }
-    if (optionslol == 'y')
+    if (choice == 'y')
     {
     debugging_enabled = true;
     }
     cout<<"Do you want Advanced Debugging? (Slow) (y = yes, n = no): ";
-    cin>>optionslol;
-    if (optionslol == 'n')
+    cin>>choice;
+    if (choice == 'n')
     {
     advanced_debugging_enabled = false;
-    goto donewithoptions;
+    goto donewithoptions1;
     }
-    if (optionslol == 'y')
+    if (choice == 'y')
     {
     advanced_debugging_enabled = true;
     }
-    //sf::RectangleShape rectangle(sf::Vector2f(900.f, 900.f));
-    //rectangle.setFillColor(sf::Color(255, 255, 255));
-    donewithoptions:
-    gbPowerOn();
-
-    //while (window.isOpen())
-    //{
-        test_for_sdl2:
-
-        //while( SDL_PollEvent( &SDL_EVENT_HANDLING))
-        //{
-
-        handleRegisters();
-        opcode = memory[pc];
-        if(debugging_enabled == true)
+    donewithoptions1:
+    cout<<"Would you like a Log of all Opcodes, Jumps, etc...?(CAN CREATE MASSIVE FILES! USE AT OWN RISK!) (y = yes, n = no)"<<endl;
+    cin>>choice;
+    if (choice == 'y')
+    {
+    log_file_made = true;
+    gamelog = fopen ("log/log.txt", "w+");
+    }
+    if (choice == 'n')
+    {
+    log_file_made = false;
+    }
+    gbPowerOn(); // Powers on the Gameboy/runs Boot Sequence (Unfinished)
+        test_for_sdl2: // A goto statement for a SDL2 Loop
+        handleRegisters(); // Handles registers
+        opcode = memory[pc]; // Sets the next opcode to be executed
+        if(debugging_enabled == true) // If the User wants debugging, this code will execute.
         {
         printf("\nOpcode: 0x%X", opcode);
         }
-        /*
-        if(debugflagopcheck == true)
-        {
-        printf("\nDo This Opcode? :");
-        cin>>choice;
-        FILE * mem_dump;
-        mem_dump = fopen ("memdump", "wb");
-        fwrite (memory , sizeof(char), sizeof(memory), mem_dump);
-        fclose (mem_dump);
-        if(choice == 'n')
-        {
-        window.close();
-        }
-        }
-        */
-        previous_opcode = opcode;
-        doOpcode();
+        previous_opcode = opcode; // A variable to keep track of the previous opcode that was executed.
+        doOpcode(); // Runs 1 Opcode
+        handleInterupts();  // Handles Interupts
 
-        handleInterupts();
-        // Note:  Remove these printf statments to speed up emulation
-        if (advanced_debugging_enabled == true)
+        if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.
         {
         printf("\nOpcode: 0x%X", opcode);
         printf("\nA_flag: 0x%X", af[0]);
@@ -143,49 +112,41 @@ int main()
         printf("\nContinue? (Y or N):");
         cin>>choice;
         }
-        //}
+        if (log_file_made == true)  // If User wants a log file, then this will write stuff to it.
+        {
+        fprintf (gamelog, "OP %X\n", opcode);
+        fprintf (gamelog, "PC %X\n", pc);
+        fprintf (gamelog, "A %X\n", af[0]);
+        fprintf (gamelog, "F %X\n", af[1]);
+        fprintf (gamelog, "B %X\n", bc[0]);
+        fprintf (gamelog, "C %X\n", bc[1]);
+        fprintf (gamelog, "D %X\n", de[0]);
+        fprintf (gamelog, "E %X\n", de[1]);
+        fprintf (gamelog, "H %X\n", hl[0]);
+        fprintf (gamelog, "L %X\n", hl[1]);
+        fprintf (gamelog, "SP %X%X\n", sp[0], sp[1]);
+        fprintf (gamelog, "CYC %d\n", cycles);
+        }
         while( SDL_PollEvent( &SDL_EVENT_HANDLING))
         {
 
         if (SDL_EVENT_HANDLING.type == SDL_QUIT)
         {
-            goto iamdone;
+            goto close_the_program;
         }
         else if (SDL_EVENT_HANDLING.type == SDL_KEYDOWN)
         {
             handle_controls();
         }
-
-
         }
         if(close_program == true)
         {
-        goto iamdone;
+        goto close_the_program;
         }
-
-
         goto test_for_sdl2;
-        iamdone:
+        close_the_program:
         SDL_DestroyWindow( AGBE_window );
         SDL_Quit();
         close_program = true;
-        /*
-        if(hl[0] == 0xCF && hl[1] == 0xFB)
-        {
-        window.close();
-        }
-        */
-       // sf::Event event;
-      //  while (window.pollEvent(event))
-      //  {
-      //      if (event.type == sf::Event::Closed)
-        //        window.close();
-      //  }
-
-       // window.clear();
-        //window.draw(rectangle);
-        //window.display();
-
-
-    return 0;
+        return 0;
 }

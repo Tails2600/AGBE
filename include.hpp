@@ -55,11 +55,13 @@ char help0xE2[0x2];
 unsigned short help0xE2_2;
 bool debugging_enabled;
 bool advanced_debugging_enabled;
+bool log_file_made;
 int8_t help0xCD;
 int8_t help0xCD2;
 int8_t help0xCD3;
 int8_t help0xC9;
 int8_t help0xC92;
+FILE * gamelog;
 // These variables will help with handleInterupts() and overall Interupt Handling
 std::bitset<1> FF0F_Interupt_Value;
 int VBlank_Timer = 32860;

@@ -1,4 +1,3 @@
-// #include <SFML/Graphics.hpp>
 #include <stdio.h>
 #include <iostream>
 #include "controls.hpp"
@@ -98,47 +97,7 @@ if(af[1] == 0x80 || af[1] == 0xC0 || af[1] == 0xA0 || af[1] == 0x90 || af[1] == 
 {
 cycles += 8;
 }
-
 pc +=2;
-/*
-if (memory[pc - 0x01] != 0x05)
-{
-goto checkc0x20;
-}
-if (memory[pc - 0x01] == 0x05) // Dec B Jump Routine NOT ZERO
-{
-    if(bc[0] == 0x0)
-    {
-    cycles += 8;
-    }
-    if(bc[0] != 0x0)
-    {
-        cycles += 8;
-        pc = pc + memory[pc + 1];
-
-    }
-}
-goto done0x20;
-checkc0x20:
-if (memory[pc - 0x01] == 0x0D)
-{
-
-    if(bc[1] == 0x0)
-    {
-    cycles += 8;
-    }
-    if(bc[1] != 0x0)
-    {
-        cycles += 8;
-        pc = pc + memory[pc + 1];
-
-    }
-}
-goto done0x20;
-done0x20:
-*/
-
-
 break;
 
 case 0x21:
@@ -380,7 +339,7 @@ fprintf (error_log, "Register D: 0x%X\n", de[0]);
 fprintf (error_log, "Register E: 0x%X\n", de[1]);
 fprintf (error_log, "Register H: 0x%X\n", hl[0]);
 fprintf (error_log, "Register L: 0x%X\n", hl[1]);
-fprintf (error_log, "Stack Pointer: 0x%X%X", sp[0], sp[1]);
+fprintf (error_log, "Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
 fprintf (error_log, "CPU Cycles: %d", cycles);
 fclose (error_log);
 break;
@@ -443,7 +402,6 @@ memory[0xFF49] = 0xFF;
 memory[0xFF4A] = 0x00;
 memory[0xFF4B] = 0x00;
 memory[0xFFFF] = 0x00;
-debugflagopcheck = false;
 return true;
 }
 
