@@ -1,23 +1,23 @@
 # depslib dependency file v1.0
-1552798304 source:/home/zach/Code::Blocks/AGBE/main.cpp
+1552918075 source:/home/zach/Code::Blocks/AGBE/main.cpp
 	"cpu.h"
 
-1552798408 /home/zach/Code::Blocks/AGBE/cpu.h
+1552926475 /home/zach/Code::Blocks/AGBE/cpu.h
 	<stdio.h>
 	<iostream>
 	"controls.hpp"
 	<time.h>
 
-1552797846 /home/zach/Code::Blocks/AGBE/include.hpp
+1552924415 /home/zach/Code::Blocks/AGBE/include.hpp
 	<bits/stdc++.h>
 
-1550336089 /home/zach/Code::Blocks/AGBE/controls.hpp
+1552841699 /home/zach/Code::Blocks/AGBE/controls.hpp
 	<SDL2/SDL.h>
 	"interupts.hpp"
 
-1552797954 /home/zach/Code::Blocks/AGBE/interupts.hpp
+1552925213 /home/zach/Code::Blocks/AGBE/interupts.hpp
 	"timers.hpp"
 
-1552792198 /home/zach/Code::Blocks/AGBE/timers.hpp
+1552842601 /home/zach/Code::Blocks/AGBE/timers.hpp
 	"include.hpp"
 

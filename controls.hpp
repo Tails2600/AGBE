@@ -3,7 +3,7 @@
 SDL_Event SDL_EVENT_HANDLING;
 SDL_Window* AGBE_window = NULL;
 SDL_Surface* screenSurface = NULL;
-int handle_controls()
+void handle_controls()
 {
 memory[0xFF80] = 0x00;
 switch( SDL_EVENT_HANDLING.key.keysym.sym )

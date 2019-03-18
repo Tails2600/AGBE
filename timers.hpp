@@ -1,4 +1,4 @@
 #include "include.hpp"
-int handleTimers()
+void handleTimers()
 {
 }

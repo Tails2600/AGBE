@@ -40,6 +40,7 @@
 		<Unit filename="include.hpp" />
 		<Unit filename="interupts.hpp" />
 		<Unit filename="main.cpp" />
+		<Unit filename="timers.hpp" />
 		<Extensions>
 			<code_completion />
 			<debugger />

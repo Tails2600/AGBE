@@ -4,9 +4,7 @@ using namespace std;
 
 int main()
 {
-
     init_memory();
-
     if( SDL_Init( SDL_INIT_VIDEO ) < 0)
     {
     cout<<"SDL2 WAS UNABLE TO INITIALIZE!"<<endl;
@@ -16,7 +14,7 @@ int main()
     screenSurface = SDL_GetWindowSurface( AGBE_window );
     SDL_Renderer* renderer;
     SDL_Texture* const texture = ::SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,SDL_TEXTUREACCESS_STREAMING, 160, 144);
-    char filename[50];
+    char filename[20];
     cout<<"Welcome to AGBE!"<<endl<<"Enter Rom Name: ";
     cin>>filename;
     cout<<"Loading "<<filename<<" please wait..."<<endl;
@@ -109,6 +107,7 @@ int main()
         printf("\nH_flag: 0x%X", hl[0]);
         printf("\nL_flag: 0x%X", hl[1]);
         printf("\nPC_flag: 0x%X", pc);
+        printf("\nSP_flag: 0x%X%X", sp[0], sp[1]);
         printf("\nContinue? (Y or N):");
         cin>>choice;
         }

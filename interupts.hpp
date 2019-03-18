@@ -1,6 +1,6 @@
 #include "timers.hpp"
 
-int handleInterupts()
+int handleInterupts() // Handles Interupts (Not Completely Finished)
 {
 switch(previous_opcode)
 {
@@ -32,17 +32,17 @@ helpEI--;
 break;
 
 case false:
-//goto done_processing_interupts; GOTO END OF FUNCTION
+goto done_with_interupt_processing;
 break;
 }
-if(VBlank_Interupt_Needs_Done == true)
+if(VBlank_Interupt_Needs_Done == true) // If the VBLank interupt Needs done, execute this.
 {
 // Do VBlank Interupt
 ime = false;
 help0xCD3 = sp[0];
 nn = help0xCD3 << 8 | sp[1];
-help0xCD = (pc + 0x3) >> 8;
-help0xCD2 = (pc + 0x3);
+help0xCD = (pc) >> 8;
+help0xCD2 = (pc);
 memory[(nn - 0xFFFF0000) - 0x02] = help0xCD2;
 memory[(nn - 0xFFFF0000) - 0x01] = help0xCD;
 pc = 0x0040;
@@ -55,5 +55,6 @@ memory[0xFF0F] = 0x00; // Note: if there is a bug where interupts are skipped, t
 VBlank_Interupt_Needs_Done = false;
 }
 
-
+done_with_interupt_processing:
+return true;
 }

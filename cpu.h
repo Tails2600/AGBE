@@ -7,7 +7,7 @@ int doOpcode()
 {
 switch(opcode)
 {
-case 0x00: // nop
+case 0x00: // NOP (No Operation)
 pc++;
 cycles += 4;
 break;
@@ -19,7 +19,7 @@ pc += 3;
 cycles += 12;
 break;
 
-case 0x5: // dec b
+case 0x5: // DEC B (Decrease B by 0x01)
 bc[0]--;
 
 if(bc[0] == 0x00)
@@ -35,7 +35,7 @@ pc++;
 cycles += 4;
 break;
 
-case 0x6: // ld b,(value in front of opcode)
+case 0x6: // LD B (Loads the value that is in front of the Current Opcode into B)
 bc[0] = memory[pc + 1];
 cycles += 8;
 pc += 2;
@@ -67,7 +67,6 @@ break;
 
 case 0xD:
 bc[1]--;
-debugflagopcheck = true;
 if(bc[1] == 0x00)
 {
 af[1] = 0xC0;
@@ -107,6 +106,16 @@ cycles += 12;
 pc += 3;
 break;
 
+case 0x28:
+help0x28 = af[1]>>7;
+if(help0x28 == bin_value_1)
+{
+pc = pc + memory[pc + 0x01];
+}
+pc += 2;
+cycles += 8;
+break;
+
 case 0x2A:
 af[0] = memory[hlbuffer];
 hl[1] += 0x01;
@@ -116,6 +125,13 @@ hl[0] += 0x01;
 }
 cycles += 8;
 pc += 1;
+break;
+
+case 0x2F:
+af[0] = ~af[0];
+af[1] = 0x60;
+cycles += 4;
+pc++;
 break;
 
 case 0x31:
@@ -144,10 +160,50 @@ cycles += 8;
 pc++;
 break;
 
+case 0x34:
+help0x34 = hl[0] << 8 | hl[1];
+memory[help0x34]++;
+if(memory[help0x34] == 0x00)
+{
+af[1] = 0x80;
+goto done0x34;
+}
+af[1] = 0x00;
+done0x34:
+cycles += 12;
+pc++;
+break;
+
 case 0x36:
 memory[hlbuffer] = memory[pc + 1];
 cycles += 12;
 pc += 2;
+break;
+
+case 0x3C:
+af[0]++;
+if(af[0] == 0x00)
+{
+af[1] = 0x80;
+goto done0x3C;
+}
+af[1] = 0x00;
+done0x3C:
+cycles += 4;
+pc++;
+break;
+
+case 0x3D:
+af[0] -= 0x01;
+if(af[0] == 0x00)
+{
+af[1] = 0xC0;  //Note:  This is not the Exact behavior, however I dont have a way to write to specific bits right now so this will have to do.
+goto done0x3D;
+}
+af[1] = 0x40;
+done0x3D:
+cycles += 4;
+pc++;
 break;
 
 case 0x3E:
@@ -158,6 +214,19 @@ break;
 
 case 0x78:
 af[0] = bc[0];
+pc++;
+cycles += 4;
+break;
+
+case 0xA7:
+af[0] = af[0] && af[0];
+if(af[0] == 0x00)
+{
+af[1] = 0xA0;
+goto A7Done;
+}
+af[1] = 0x20;
+A7Done:
 pc++;
 cycles += 4;
 break;
@@ -199,12 +268,84 @@ cycles += 4;
 pc++;
 break;
 
+case 0xC0:
+help0xC0 = af[1]>>7;
+if(help0xC0 == bin_value_0)
+{
+nn = sp[0] << 8 | sp[1];
+help0xC92 = memory[nn - 0xFFFF0000];
+help0xC9 = memory[(nn - 0xFFFF0000) + 1];
+pc = help0xC9 << 8 | help0xC92;
+sp[1] += 0x02;
+if(sp[1] == 0x00 || sp[1] == 0x01)
+{
+sp[0] += 0x01;
+}
+goto done0xC0;
+}
+pc++;
+done0xC0:
+cycles += 8;
+break;
+
+case 0xC1:
+help0xE1 = sp[0] << 8 | sp[1];
+bc[0] = memory[help0xE1 + 1];
+bc[1] = memory[help0xE1];
+sp[1] += 2;
+if(sp[1] == 0x00 | sp[1] == 0x01)
+{
+sp[0]++;
+}
+cycles += 12;
+pc++;
+break;
+
 case 0xC3:
 opnn[0] = memory[pc + 2];
 opnn[1] = memory[pc + 1];
 nn = opnn[0] << 8 | opnn[1];
 pc = nn;
 cycles += 4;
+break;
+
+case 0xC5:
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = bc[0];
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = bc[1];
+pc++;
+cycles += 16;
+break;
+
+case 0xC8:
+help0xC0 = af[1]>>7;
+if(help0xC0 == bin_value_1)
+{
+nn = sp[0] << 8 | sp[1];
+help0xC92 = memory[nn - 0xFFFF0000];
+help0xC9 = memory[(nn - 0xFFFF0000) + 1];
+pc = help0xC9 << 8 | help0xC92;
+sp[1] += 0x02;
+if(sp[1] == 0x00 || sp[1] == 0x01)
+{
+sp[0] += 0x01;
+}
+goto done0xC8;
+}
+pc++;
+done0xC8:
+cycles += 8;
 break;
 
 case 0xC9:
@@ -230,13 +371,65 @@ memory[(nn - 0xFFFF0000) - 0x01] = help0xCD;
 opnn[0] = memory[pc + 2];
 opnn[1] = memory[pc + 1];
 nn = opnn[0] << 8 | opnn[1];
-pc = nn;
+help0xCD4 = nn;
+pc = help0xCD4;
 sp[1] -= 0x02;
 if(sp[1] == 0xFF || sp[1] == 0xFE)
 {
 sp[0] -= 0x01;
 }
 cycles += 12;
+break;
+
+case 0xD1:
+help0xE1 = sp[0] << 8 | sp[1];
+de[0] = memory[help0xE1 + 1];
+de[1] = memory[help0xE1];
+sp[1] += 2;
+if(sp[1] == 0x00 | sp[1] == 0x01)
+{
+sp[0]++;
+}
+cycles += 12;
+pc++;
+break;
+
+case 0xD5:
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = de[0];
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = de[1];
+pc++;
+cycles += 16;
+break;
+
+case 0xD9:
+help0xE1 = sp[0] << 8 | sp[1];
+help0xD9[0] = memory[help0xE1 + 1];
+help0xD9[1] = memory[help0xE1];
+pc = help0xD9[0] << 8 | help0xD9[1];
+sp[1] += 2;
+if(sp[1] == 0x00 | sp[1] == 0x01)
+{
+sp[0]++;
+}
+ime = true;
+if (memory[0xFF0F] != 0x00)
+{
+helpEI = 1;
+}
+cycles += 8;
+advanced_debugging_enabled = true;
 break;
 
 case 0xE0:
@@ -248,6 +441,19 @@ pc += 2;
 cycles += 12;
 break;
 
+case 0xE1:
+help0xE1 = sp[0] << 8 | sp[1];
+hl[0] = memory[help0xE1 + 1];
+hl[1] = memory[help0xE1];
+sp[1] += 2;
+if(sp[1] == 0x00 | sp[1] == 0x01)
+{
+sp[0]++;
+}
+cycles += 12;
+pc++;
+break;
+
 case 0xE2:
 help0xE2[0] = 0xFF;
 help0xE2[1] = c;
@@ -255,6 +461,25 @@ help0xE2_2 = help0xE2[0] << 8 | help0xE2[1];
 memory[help0xE2_2] = af[0];
 pc++;
 cycles += 8;
+break;
+
+case 0xE5:
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = hl[0];
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = hl[1];
+pc++;
+cycles += 16;
 break;
 
 case 0xEA:
@@ -280,13 +505,52 @@ pc += 2;
 cycles += 12;
 break;
 
-case 0xF3: // di (no point in implementing yet because interupts aren't implemented)
+case 0xF1:
+help0xE1 = sp[0] << 8 | sp[1];
+af[0] = memory[help0xE1 + 1];
+af[1] = memory[help0xE1];
+sp[1] += 2;
+if(sp[1] == 0x00 | sp[1] == 0x01)
+{
+sp[0]++;
+}
+cycles += 12;
+pc++;
+break;
+
+case 0xF3: // DI (Disables Interupts)
 ime = false;
 cycles += 4;
 pc++;
 break;
 
-case 0xFB: // ei (no point in implementing yet because interupts aren't implemented)
+case 0xF5: // PUSH AF (Pushes AF onto Stack)
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = af[0];
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = af[1];
+pc++;
+cycles += 16;
+break;
+
+case 0xFA:
+nn = memory[pc + 2] << 8 | memory[pc + 1];
+af[0] = memory[nn];
+pc += 3;
+cycles += 16;
+break;
+
+case 0xFB: // EI (Enables Interupts)
 ime = true;
 if (memory[0xFF0F] != 0x00)
 {
@@ -318,8 +582,7 @@ printf("Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
 printf("Cycles: %i\n", cycles);
 printf("Please see errorlog.txt for more details.\n");
 printf("Please see memdump for a full GB mem dump.\n");
-//window.close();
-SDL_DestroyWindow( AGBE_window );
+SDL_DestroyWindow(AGBE_window);
 SDL_Quit();
 close_program = true;
 FILE * mem_dump;
@@ -328,8 +591,8 @@ fwrite (memory , sizeof(char), sizeof(memory), mem_dump);
 fclose (mem_dump);
 FILE * error_log;
 error_log = fopen ("log/errorlog.txt", "w+");
-fwrite ("An Unknown Opcode was Encountered.", sizeof(char), 34, error_log);
-fprintf (error_log, "\nOpcode: 0x%X\n", opcode);
+fprintf (error_log, "An Unknown Opcode was Encountered.\n");
+fprintf (error_log, "Opcode: 0x%X\n", opcode);
 fprintf (error_log, "Program Counter: 0x%X\n", pc);
 fprintf (error_log, "Register A: 0x%X\n", af[0]);
 fprintf (error_log, "Register F: 0x%X\n", af[1]);
@@ -340,7 +603,7 @@ fprintf (error_log, "Register E: 0x%X\n", de[1]);
 fprintf (error_log, "Register H: 0x%X\n", hl[0]);
 fprintf (error_log, "Register L: 0x%X\n", hl[1]);
 fprintf (error_log, "Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
-fprintf (error_log, "CPU Cycles: %d", cycles);
+fprintf (error_log, "CPU Cycles: %i", cycles);
 fclose (error_log);
 break;
 }
@@ -405,19 +668,20 @@ memory[0xFFFF] = 0x00;
 return true;
 }
 
-int init_memory()
+void init_memory()
 {
 int debugmeminit;
 debugmeminit = 0x0000;
-againagain:
+debug_mem_init_again:
 debugmeminit++;
 if(debugmeminit != 0x10000)
 {
 memory[debugmeminit] = 0xFF;
-goto againagain;
+goto debug_mem_init_again;
 }
 if(debugmeminit == 0x10000)
 {
 
 }
+
 }
