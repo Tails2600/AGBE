@@ -128,7 +128,9 @@ pc += 1;
 break;
 
 case 0x2F:
+printf("a: %X\n", af[0]);
 af[0] = ~af[0];
+printf("a: %X\n", af[0]);
 af[1] = 0x60;
 cycles += 4;
 pc++;
@@ -429,7 +431,6 @@ if (memory[0xFF0F] != 0x00)
 helpEI = 1;
 }
 cycles += 8;
-advanced_debugging_enabled = true;
 break;
 
 case 0xE0:
@@ -480,6 +481,22 @@ spbuffer = sp[0] << 8 | sp[1];
 memory[spbuffer] = hl[1];
 pc++;
 cycles += 16;
+break;
+
+case 0xE6:
+printf("A: %X", af[0]);
+af[0] = af[0] && memory[pc + 0x01];
+printf("mem: %X", memory[pc + 0x01]);
+printf("A: %X", af[0]);
+if(af[0] == 0x00)
+{
+af[1] = 0xA0;
+goto E6Done;
+}
+af[1] = 0x20;
+E6Done:
+pc += 2;
+cycles += 8;
 break;
 
 case 0xEA:
@@ -634,6 +651,7 @@ de[0] = 0x00;
 de[1] = 0xD8;
 sp[0] = 0xFF;
 sp[1] = 0xFE;
+memory[0xFF00] = 0xCF;
 memory[0xFF05] = 0x00;
 memory[0xFF06] = 0x00;
 memory[0xFF07] = 0x00;

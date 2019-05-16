@@ -1,8 +1,8 @@
 # depslib dependency file v1.0
-1552918075 source:/home/zach/Code::Blocks/AGBE/main.cpp
+1555958858 source:/home/zach/Code::Blocks/AGBE/main.cpp
 	"cpu.h"
 
-1552926475 /home/zach/Code::Blocks/AGBE/cpu.h
+1555959055 /home/zach/Code::Blocks/AGBE/cpu.h
 	<stdio.h>
 	<iostream>
 	"controls.hpp"

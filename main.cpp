@@ -2,7 +2,7 @@
 
 using namespace std;
 
-int main()
+int main(int argc, char** argv)
 {
     init_memory();
     if( SDL_Init( SDL_INIT_VIDEO ) < 0)
@@ -14,9 +14,21 @@ int main()
     screenSurface = SDL_GetWindowSurface( AGBE_window );
     SDL_Renderer* renderer;
     SDL_Texture* const texture = ::SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,SDL_TEXTUREACCESS_STREAMING, 160, 144);
-    char filename[20];
-    cout<<"Welcome to AGBE!"<<endl<<"Enter Rom Name: ";
-    cin>>filename;
+    char *filename;
+    cout<<"Welcome to AGBE!"<<endl;
+    if(argv[1] == NULL)
+    {
+    char filename2temp[20];
+    cout<<"Enter Rom Name: ";
+    cin>>filename2temp;
+    filename = filename2temp;
+    }
+    if(argv[1] != NULL)
+    {
+    cout<<"Rom Automatically detected from Command Line Arguments."<<endl;
+    cout<<"Rom: "<<argv[1]<<endl;
+    filename = argv[1];
+    }
     cout<<"Loading "<<filename<<" please wait..."<<endl;
     FILE* rom = fopen(filename, "rb");
         if (rom == NULL){
@@ -93,6 +105,10 @@ int main()
         }
         previous_opcode = opcode; // A variable to keep track of the previous opcode that was executed.
         doOpcode(); // Runs 1 Opcode
+        if (pc == 0x29FC)
+        {
+        advanced_debugging_enabled = true;
+        }
         handleInterupts();  // Handles Interupts
 
         if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.
@@ -108,6 +124,7 @@ int main()
         printf("\nL_flag: 0x%X", hl[1]);
         printf("\nPC_flag: 0x%X", pc);
         printf("\nSP_flag: 0x%X%X", sp[0], sp[1]);
+        printf("\nMem_Joypad: 0x%X", memory[0xFF00]);
         printf("\nContinue? (Y or N):");
         cin>>choice;
         }
