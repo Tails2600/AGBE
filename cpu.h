@@ -86,6 +86,24 @@ cycles += 8;
 pc += 2;
 break;
 
+case 0x16:
+de[0] = memory[pc + 1];
+pc += 2;
+cycles += 8;
+break;
+
+case 0x19:
+hl[0] = hl[0] + de[0];
+hl[1] = hl[1] + de[1];
+if(hl[1] < de[1])
+{
+hl[0]++;
+}
+af[1] = 0x00;
+cycles += 8;
+pc++;
+break;
+
 case 0x20:
 if(af[1] != 0x80 && af[1] != 0xC0 && af[1] != 0xA0 && af[1] != 0x90 && af[1] != 0xE0 && af[1] != 0xB0 && af[1] != 0xD0 && af[1] != 0xF0)
 {
@@ -104,6 +122,16 @@ hl[0] = memory[pc + 2];
 hl[1] = memory[pc + 1];
 cycles += 12;
 pc += 3;
+break;
+
+case 0x23:
+hl[1]++;
+if(hl[1] == 0x00)
+{
+hl[0]++;
+}
+pc++;
+cycles += 8;
 break;
 
 case 0x28:
@@ -224,6 +252,26 @@ pc++;
 cycles += 4;
 break;
 
+case 0x56:
+hlbuffer = hl[0] << 8 | hl[1];
+de[0] = memory[hlbuffer];
+cycles += 8;
+pc++;
+break;
+
+case 0x5E:
+hlbuffer = hl[0] << 8 | hl[1];
+de[1] = memory[hlbuffer];
+cycles += 8;
+pc++;
+break;
+
+case 0x5F:
+de[1] = af[0];
+pc++;
+cycles += 4;
+break;
+
 case 0x78:
 af[0] = bc[0];
 pc++;
@@ -232,6 +280,20 @@ break;
 
 case 0x79:
 af[0] = bc[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x87:
+af[0] = af[0] + af[0];
+if(af[0] == 0x00)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x00)
+{
+af[1] = 0x00;
+}
 pc++;
 cycles += 4;
 break;
@@ -448,6 +510,9 @@ cycles += 8;
 pc += 2;
 break; // Ends 0xCB37 Case
 
+default:
+goto invalid_opcode_jump;
+break;
 }
 break; // Ends entire 0xCB Case
 
@@ -584,6 +649,13 @@ pc += 2;
 cycles += 8;
 break;
 
+case 0xE9:
+hlbuffer = hl[0] << 8 | hl[1];
+pc = hlbuffer;
+cycles += 4;
+advanced_debugging_enabled = true;
+break;
+
 case 0xEA:
 opnn[0] = memory[pc + 2];
 opnn[1] = memory[pc + 1];
@@ -596,6 +668,32 @@ memory[nn] = af[0];
 done0xEA:
 cycles += 16;
 pc += 3;
+break;
+
+case 0xEF:
+// Note: 0xEF2 has the First bit, while 0xEF has the second.
+pc++;
+backupPC0xEF = pc;
+help0xEF = pc; // to copy the first 8 bits.
+pc = pc>>8; //push the other 8 bits to the right
+help0xEF2 = pc;
+pc = backupPC0xEF;
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = help0xEF2;
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = help0xEF; // End of copying current PC to mem at SP
+pc = 0x0028;
+cycles += 32;
 break;
 
 case 0xF0:
@@ -678,6 +776,7 @@ pc += 2;
 break;
 
 default:
+invalid_opcode_jump:
 printf("\nAn error has Occured\nUnknown Opcode: 0x%X", opcode);
 printf("\nProgram Counter: 0x%X\n", pc);
 printf("Stack Pointer: 0x%X%X\n", sp[0], sp[1]);

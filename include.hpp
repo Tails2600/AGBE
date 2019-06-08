@@ -38,6 +38,9 @@ std::bitset<1> help0xC0;
 unsigned short help0x34;
 unsigned short help0xE1;
 char help0xD9[0x2];
+char help0xEF;
+char help0xEF2;
+unsigned short backupPC0xEF;
 // Variables that Store things like the Current Opcode being Executed
 unsigned char opcode;
 unsigned char previous_opcode;
