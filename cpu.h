@@ -128,9 +128,7 @@ pc += 1;
 break;
 
 case 0x2F:
-printf("a: %X\n", af[0]);
 af[0] = ~af[0];
-printf("a: %X\n", af[0]);
 af[1] = 0x60;
 cycles += 4;
 pc++;
@@ -214,11 +212,43 @@ cycles += 8;
 pc += 2;
 break;
 
+case 0x47:
+bc[0] = af[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x4F:
+bc[1] = af[0];
+pc++;
+cycles += 4;
+break;
+
 case 0x78:
 af[0] = bc[0];
 pc++;
 cycles += 4;
 break;
+
+case 0x79:
+af[0] = bc[1];
+pc++;
+cycles += 4;
+break;
+
+case 0xA1:
+af[0] = bc[1] && af[0];
+if(af[0] == 0x00)
+{
+af[1] = 0xA0;
+goto A1Done;
+}
+af[1] = 0x20;
+A1Done:
+pc++;
+cycles += 4;
+break;
+
 
 case 0xA7:
 af[0] = af[0] && af[0];
@@ -229,6 +259,20 @@ goto A7Done;
 }
 af[1] = 0x20;
 A7Done:
+pc++;
+cycles += 4;
+break;
+
+case 0xA9:
+af[0] = bc[1] ^ af[0];
+if(af[0] == 0x0)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x0)
+{
+af[1] = 0x00;
+}
 pc++;
 cycles += 4;
 break;
@@ -258,6 +302,29 @@ if(bc[1] < af[0])
 af[0] = af[0];
 }
 done0xB1:
+if(af[0] == 0x00)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x00)
+{
+af[1] = 0x00;
+}
+cycles += 4;
+pc++;
+break;
+
+case 0xB0:
+if(bc[0] > af[0])
+{
+af[0] = bc[0];
+goto done0xB0;
+}
+if(bc[0] < af[0])
+{
+af[0] = af[0];
+}
+done0xB0:
 if(af[0] == 0x00)
 {
 af[1] = 0x80;
@@ -362,6 +429,27 @@ sp[0] += 0x01;
 }
 cycles += 8;
 break;
+
+case 0xCB:
+switch(next_opcode)
+{
+
+case 0x37:
+af[0] = ( (af[0] & 0x0F) << 4 | (af[0] & 0xF0) >> 4 );
+if (af[0] == 0x00)
+{
+af[1] = 0x80;
+}
+if (af[0] != 0x00)
+{
+af[1] = 0x00;
+}
+cycles += 8;
+pc += 2;
+break; // Ends 0xCB37 Case
+
+}
+break; // Ends entire 0xCB Case
 
 case 0xCD:
 help0xCD3 = sp[0];
@@ -484,10 +572,7 @@ cycles += 16;
 break;
 
 case 0xE6:
-printf("A: %X", af[0]);
 af[0] = af[0] && memory[pc + 0x01];
-printf("mem: %X", memory[pc + 0x01]);
-printf("A: %X", af[0]);
 if(af[0] == 0x00)
 {
 af[1] = 0xA0;

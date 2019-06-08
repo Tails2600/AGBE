@@ -60,8 +60,8 @@ int main(int argc, char** argv)
     }
     fclose(rom);
     free(rom_buffer);
-    std::cerr<<filename<<" was successfully loaded."<<std::endl;
-    cout<<"Do you want Debugging printf statements? (y = yes, n = no): ";
+    std::cerr<<filename<<" was successfully loaded."<<std::endl; // Does what it says.
+    cout<<"Do you want Debugging printf statements? (y = yes, n = no): "; // Does what it says.
     cin>>choice;
     if (choice == 'n')
     {
@@ -72,28 +72,28 @@ int main(int argc, char** argv)
     {
     debugging_enabled = true;
     }
-    cout<<"Do you want Advanced Debugging? (Slow) (y = yes, n = no): ";
-    cin>>choice;
-    if (choice == 'n')
+    cout<<"Do you want Advanced Debugging? (Slow) (y = yes, n = no): "; // Does what it says.
+    cin>>choice; // Get Input from User
+    if (choice == 'n') // If choice is No
     {
-    advanced_debugging_enabled = false;
-    goto donewithoptions1;
+    advanced_debugging_enabled = false; // Disables Advanced Debugging
+    goto donewithoptions1; // Does what it says.
     }
-    if (choice == 'y')
+    if (choice == 'y') // If Choice is Yes
     {
-    advanced_debugging_enabled = true;
+    advanced_debugging_enabled = true; // Enables advanced debugging.
     }
-    donewithoptions1:
-    cout<<"Would you like a Log of all Opcodes, Jumps, etc...?(CAN CREATE MASSIVE FILES! USE AT OWN RISK!) (y = yes, n = no)"<<endl;
-    cin>>choice;
-    if (choice == 'y')
+    donewithoptions1: // Done with the First set of options.
+    cout<<"Would you like a Log of all Opcodes, Jumps, etc...?(CAN CREATE MASSIVE FILES! USE AT OWN RISK!) (y = yes, n = no)"<<endl; // Does what it says.
+    cin>>choice; // Get input from User.
+    if (choice == 'y') // If choice is yes...
     {
-    log_file_made = true;
-    gamelog = fopen ("log/log.txt", "w+");
+    log_file_made = true; // Log File IS made.
+    gamelog = fopen ("log/log.txt", "w+"); // Makes the Log File.
     }
-    if (choice == 'n')
+    if (choice == 'n') // If choice is no...
     {
-    log_file_made = false;
+    log_file_made = false; // Log file is NOT made.
     }
     gbPowerOn(); // Powers on the Gameboy/runs Boot Sequence (Unfinished)
         test_for_sdl2: // A goto statement for a SDL2 Loop
@@ -101,68 +101,63 @@ int main(int argc, char** argv)
         opcode = memory[pc]; // Sets the next opcode to be executed
         if(debugging_enabled == true) // If the User wants debugging, this code will execute.
         {
-        printf("\nOpcode: 0x%X", opcode);
+        printf("\nOpcode: 0x%X", opcode);  // Does what it says.
         }
         previous_opcode = opcode; // A variable to keep track of the previous opcode that was executed.
+        next_opcode = memory[pc + 0x01];
         doOpcode(); // Runs 1 Opcode
-        if (pc == 0x29FC)
-        {
-        advanced_debugging_enabled = true;
-        }
         handleInterupts();  // Handles Interupts
-
         if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.
         {
-        printf("\nOpcode: 0x%X", opcode);
-        printf("\nA_flag: 0x%X", af[0]);
-        printf("\nF_flag: 0x%X", af[1]);
-        printf("\nB_flag: 0x%X", bc[0]);
-        printf("\nC_flag: 0x%X", bc[1]);
-        printf("\nD_flag: 0x%X", de[0]);
-        printf("\nE_flag: 0x%X", de[1]);
-        printf("\nH_flag: 0x%X", hl[0]);
-        printf("\nL_flag: 0x%X", hl[1]);
-        printf("\nPC_flag: 0x%X", pc);
-        printf("\nSP_flag: 0x%X%X", sp[0], sp[1]);
-        printf("\nMem_Joypad: 0x%X", memory[0xFF00]);
-        printf("\nContinue? (Y or N):");
+        printf("\nOpcode: 0x%X", opcode); // Does what it says.
+        printf("\nA_flag: 0x%X", af[0]); // Does what it says.
+        printf("\nF_flag: 0x%X", af[1]); // Does what it says.
+        printf("\nB_flag: 0x%X", bc[0]); // Does what it says.
+        printf("\nC_flag: 0x%X", bc[1]); // Does what it says.
+        printf("\nD_flag: 0x%X", de[0]); // Does what it says.
+        printf("\nE_flag: 0x%X", de[1]); // Does what it says.
+        printf("\nH_flag: 0x%X", hl[0]); // Does what it says.
+        printf("\nL_flag: 0x%X", hl[1]); // Does what it says.
+        printf("\nPC_flag: 0x%X", pc); // Does what it says.
+        printf("\nSP_flag: 0x%X%X", sp[0], sp[1]); // Does what it says.
+        printf("\nMem_Joypad: 0x%X", memory[0xFF00]); // Does what it says.
+        printf("\nContinue? (Y or N):"); // This option doesn't make a difference.  It's just here to make a sort of STEP Function.
         cin>>choice;
         }
         if (log_file_made == true)  // If User wants a log file, then this will write stuff to it.
         {
-        fprintf (gamelog, "OP %X\n", opcode);
-        fprintf (gamelog, "PC %X\n", pc);
-        fprintf (gamelog, "A %X\n", af[0]);
-        fprintf (gamelog, "F %X\n", af[1]);
-        fprintf (gamelog, "B %X\n", bc[0]);
-        fprintf (gamelog, "C %X\n", bc[1]);
-        fprintf (gamelog, "D %X\n", de[0]);
-        fprintf (gamelog, "E %X\n", de[1]);
-        fprintf (gamelog, "H %X\n", hl[0]);
-        fprintf (gamelog, "L %X\n", hl[1]);
-        fprintf (gamelog, "SP %X%X\n", sp[0], sp[1]);
-        fprintf (gamelog, "CYC %d\n", cycles);
+        fprintf (gamelog, "OP %X\n", opcode); // Does what it says.
+        fprintf (gamelog, "PC %X\n", pc); // Does what it says.
+        fprintf (gamelog, "A %X\n", af[0]); // Does what it says.
+        fprintf (gamelog, "F %X\n", af[1]); // Does what it says.
+        fprintf (gamelog, "B %X\n", bc[0]); // Does what it says.
+        fprintf (gamelog, "C %X\n", bc[1]); // Does what it says.
+        fprintf (gamelog, "D %X\n", de[0]); // Does what it says.
+        fprintf (gamelog, "E %X\n", de[1]); // Does what it says.
+        fprintf (gamelog, "H %X\n", hl[0]); // Does what it says.
+        fprintf (gamelog, "L %X\n", hl[1]); // Does what it says.
+        fprintf (gamelog, "SP %X%X\n", sp[0], sp[1]); // Does what it says.
+        fprintf (gamelog, "CYC %d\n", cycles); // Does what it says.
         }
-        while( SDL_PollEvent( &SDL_EVENT_HANDLING))
+        while( SDL_PollEvent( &SDL_EVENT_HANDLING)) // While Event to handle Random Stuff
         {
-
-        if (SDL_EVENT_HANDLING.type == SDL_QUIT)
+        if (SDL_EVENT_HANDLING.type == SDL_QUIT) // If the SDL Window is Closed, close the program.
         {
-            goto close_the_program;
+            goto close_the_program; // Closes the Program
         }
-        else if (SDL_EVENT_HANDLING.type == SDL_KEYDOWN)
+        else if (SDL_EVENT_HANDLING.type == SDL_KEYDOWN) // If a key is being pressed, handle controls.
         {
-            handle_controls();
+            handle_controls(); // Handle Controls
         }
         }
-        if(close_program == true)
+        if(close_program == true) // If close_program is true, close the program.
         {
-        goto close_the_program;
+        goto close_the_program; // Goes to the operation that closes the program
         }
-        goto test_for_sdl2;
-        close_the_program:
-        SDL_DestroyWindow( AGBE_window );
-        SDL_Quit();
-        close_program = true;
-        return 0;
+        goto test_for_sdl2; // End of SDL2 Loop
+        close_the_program: // Program Jumps here if close_program is set to true.
+        SDL_DestroyWindow( AGBE_window ); // Destroys the SDL2 Window
+        SDL_Quit(); // Quits SDL
+        close_program = true; // IDK why this is here but i'm leaving it here for now.
+        return 0; // return 0
 }

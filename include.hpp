@@ -41,6 +41,7 @@ char help0xD9[0x2];
 // Variables that Store things like the Current Opcode being Executed
 unsigned char opcode;
 unsigned char previous_opcode;
+unsigned char next_opcode;
 int64_t cycles;
 unsigned char opnn[2]; // JP
 int16_t nn = 0x00000000;
