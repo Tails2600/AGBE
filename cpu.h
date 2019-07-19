@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <iostream>
 #include "controls.hpp"
 #include <time.h>
 
@@ -653,7 +651,7 @@ case 0xE9:
 hlbuffer = hl[0] << 8 | hl[1];
 pc = hlbuffer;
 cycles += 4;
-advanced_debugging_enabled = true;
+//advanced_debugging_enabled = true;
 break;
 
 case 0xEA:

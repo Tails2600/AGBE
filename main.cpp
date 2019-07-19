@@ -4,10 +4,13 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
+    //printf("Hello, due to Compatibility Reasons, can you tell me which operating system you are using?\n");
+    //printf("1. Windows or 2. Linux?\n");
+    //scanf("%i",Operating_System);
     init_memory();
     if( SDL_Init( SDL_INIT_VIDEO ) < 0)
     {
-    cout<<"SDL2 WAS UNABLE TO INITIALIZE!"<<endl;
+    printf("SDL2 WAS UNABLE TO INITIALIZE!");
     return 1;
     }
     AGBE_window = SDL_CreateWindow("AGBE", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160, 144, SDL_WINDOW_SHOWN);
@@ -15,24 +18,23 @@ int main(int argc, char** argv)
     SDL_Renderer* renderer;
     SDL_Texture* const texture = ::SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,SDL_TEXTUREACCESS_STREAMING, 160, 144);
     char *filename;
-    cout<<"Welcome to AGBE!"<<endl;
+    printf("Welcome to AGBE!\n");
     if(argv[1] == NULL)
     {
     char filename2temp[20];
-    cout<<"Enter Rom Name: ";
-    cin>>filename2temp;
+    printf("Enter Rom Name: ");
+    scanf("%s",filename2temp);
     filename = filename2temp;
     }
     if(argv[1] != NULL)
     {
-    cout<<"Rom Automatically detected from Command Line Arguments."<<endl;
-    cout<<"Rom: "<<argv[1]<<endl;
+    printf("Rom Automatically detected from Command Line Arguments.\n");
     filename = argv[1];
     }
-    cout<<"Loading "<<filename<<" please wait..."<<endl;
+    printf("Loading... Please Wait.\n");
     FILE* rom = fopen(filename, "rb");
         if (rom == NULL){
-            std::cerr<<"Failed to open ROM"<<std::endl;
+            printf("Failed to Load Rom\n");
             return false;
         }
     fseek(rom, 0, SEEK_END);
@@ -40,29 +42,29 @@ int main(int argc, char** argv)
     rewind(rom);
     char* rom_buffer = (char*) malloc(sizeof(char) * rom_size);
         if (rom_buffer == NULL){
-            std::cerr<<"Failed to allocate memory for ROM"<<std::endl;
+            printf("Failed to allocate memory for ROM\n");
             return false;
         }
     size_t result = fread(rom_buffer, sizeof(char), (size_t)rom_size, rom);
         if(result != rom_size){
-        std::cerr<<"Failed to Read Rom"<<std::endl;
+        printf("Failed to Read Rom\n");
         return false;
         }
     if ((32769) > rom_size){
-            std::cerr<<"Loading Rom into memory"<<std::endl;
+            printf("Loading Rom Into Memory.\n");
             for (int i = 0; i < rom_size; ++i) {
                 memory[i + 0] = (uint8_t)rom_buffer[i];   // Load into memory starting at 0x0000
             }
         }
     else {
-        std::cerr << "ROM too large to fit in memory" << std::endl;
+        printf("ROM too large to fit in memory\n");
         return false;
     }
     fclose(rom);
     free(rom_buffer);
-    std::cerr<<filename<<" was successfully loaded."<<std::endl; // Does what it says.
-    cout<<"Do you want Debugging printf statements? (y = yes, n = no): "; // Does what it says.
-    cin>>choice;
+    printf("Rom was Successfully loaded.\n");
+    printf("Do you want Debugging printf statements? (y = yes, n = no): "); // Does what it says.
+    scanf("%s",choice);
     if (choice == 'n')
     {
     debugging_enabled = false;
@@ -72,8 +74,8 @@ int main(int argc, char** argv)
     {
     debugging_enabled = true;
     }
-    cout<<"Do you want Advanced Debugging? (Slow) (y = yes, n = no): "; // Does what it says.
-    cin>>choice; // Get Input from User
+    printf("Do you want Advanced Debugging? (Slow) (y = yes, n = no): "); // Does what it says.
+    scanf("%s",choice); // Get Input from User
     if (choice == 'n') // If choice is No
     {
     advanced_debugging_enabled = false; // Disables Advanced Debugging
@@ -84,8 +86,8 @@ int main(int argc, char** argv)
     advanced_debugging_enabled = true; // Enables advanced debugging.
     }
     donewithoptions1: // Done with the First set of options.
-    cout<<"Would you like a Log of all Opcodes, Jumps, etc...?(CAN CREATE MASSIVE FILES! USE AT OWN RISK!) (y = yes, n = no)"<<endl; // Does what it says.
-    cin>>choice; // Get input from User.
+    printf("Would you like a Log of all Opcodes, Jumps, etc...?(CAN CREATE MASSIVE FILES! USE AT OWN RISK!) (y = yes, n = no)\n"); // Does what it says.
+    scanf("%s",choice); // Get input from User.
     if (choice == 'y') // If choice is yes...
     {
     log_file_made = true; // Log File IS made.
@@ -122,7 +124,7 @@ int main(int argc, char** argv)
         printf("\nSP_flag: 0x%X%X", sp[0], sp[1]); // Does what it says.
         printf("\nMem_Joypad: 0x%X", memory[0xFF00]); // Does what it says.
         printf("\nContinue? (Y or N):"); // This option doesn't make a difference.  It's just here to make a sort of STEP Function.
-        cin>>choice;
+        scanf("%s",choice);
         }
         if (log_file_made == true)  // If User wants a log file, then this will write stuff to it.
         {

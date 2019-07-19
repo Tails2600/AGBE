@@ -1,4 +1,6 @@
 #include <bits/stdc++.h>
+#include <stdio.h>
+#include <iostream>
 // The Gameboy RAM
 char memory[0x10000];
 // Registers and Flags
@@ -53,6 +55,7 @@ char choice;
 bool debugging_enabled;
 bool advanced_debugging_enabled;
 bool log_file_made;
+int Operating_System;
 // Variables used for Logging
 FILE * gamelog;
 // Variables that help with Interupt Processing
@@ -65,3 +68,8 @@ bool VBlank_Interupt_Needs_Done;
 std::bitset<8> FF0F_Interupt_Value2;
 // Variables used for Testing
 int testingn;
+
+
+
+
+// Other Functions
