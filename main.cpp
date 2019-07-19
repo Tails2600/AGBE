@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     free(rom_buffer);
     printf("Rom was Successfully loaded.\n");
     printf("Do you want Debugging printf statements? (y = yes, n = no): "); // Does what it says.
-    scanf("%s",choice);
+    cin>>choice;
     if (choice == 'n')
     {
     debugging_enabled = false;
@@ -75,7 +75,7 @@ int main(int argc, char** argv)
     debugging_enabled = true;
     }
     printf("Do you want Advanced Debugging? (Slow) (y = yes, n = no): "); // Does what it says.
-    scanf("%s",choice); // Get Input from User
+    cin>>choice; // Get Input from User
     if (choice == 'n') // If choice is No
     {
     advanced_debugging_enabled = false; // Disables Advanced Debugging
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
     }
     donewithoptions1: // Done with the First set of options.
     printf("Would you like a Log of all Opcodes, Jumps, etc...?(CAN CREATE MASSIVE FILES! USE AT OWN RISK!) (y = yes, n = no)\n"); // Does what it says.
-    scanf("%s",choice); // Get input from User.
+    cin>>choice; // Get input from User.
     if (choice == 'y') // If choice is yes...
     {
     log_file_made = true; // Log File IS made.
@@ -124,7 +124,7 @@ int main(int argc, char** argv)
         printf("\nSP_flag: 0x%X%X", sp[0], sp[1]); // Does what it says.
         printf("\nMem_Joypad: 0x%X", memory[0xFF00]); // Does what it says.
         printf("\nContinue? (Y or N):"); // This option doesn't make a difference.  It's just here to make a sort of STEP Function.
-        scanf("%s",choice);
+        cin>>choice;
         }
         if (log_file_made == true)  // If User wants a log file, then this will write stuff to it.
         {
