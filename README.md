@@ -7,7 +7,7 @@ In order for it to run, you need 4 dll files.
 - libgcc_s_dw2-1.dll
 - libgcc_s_sjlj-1.dll
 - libstdc++-6.dll
-- SDL2.dll
+- SDL2.dll  
 Once you have these dll files, put them where you put AGBE.exe  
 Next, go to the top of Windows Explorer where the directory is, and click in an empty space.  
 Next, type cmd and press enter.  
