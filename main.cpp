@@ -4,19 +4,31 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
-    //printf("Hello, due to Compatibility Reasons, can you tell me which operating system you are using?\n");
-    //printf("1. Windows or 2. Linux?\n");
-    //scanf("%i",Operating_System);
-    init_memory();
-    if( SDL_Init( SDL_INIT_VIDEO ) < 0)
+    printf("Before we begin, do you want to enable SDL2? (y = yes, n = no)\nSDL2 is for Graphics and Input, which aren't implemented yet.\nOption: ");
+    cin>>choice;
+    if (choice == 'y')
     {
-    printf("SDL2 WAS UNABLE TO INITIALIZE!");
-    return 1;
+    sdl_wanted = true;
+    goto beginbeforeinitmemory;
     }
-    AGBE_window = SDL_CreateWindow("AGBE", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160, 144, SDL_WINDOW_SHOWN);
-    screenSurface = SDL_GetWindowSurface( AGBE_window );
-    SDL_Renderer* renderer;
-    SDL_Texture* const texture = ::SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,SDL_TEXTUREACCESS_STREAMING, 160, 144);
+    if (choice == 'n')
+    {
+    sdl_wanted = false;
+    }
+    beginbeforeinitmemory:
+    init_memory();
+    if (sdl_wanted == true)
+    {
+        if( SDL_Init( SDL_INIT_VIDEO ) < 0)
+        {
+        printf("SDL2 was Unable to Initialize!");
+        return 1;
+        }
+        AGBE_window = SDL_CreateWindow("AGBE", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160, 144, SDL_WINDOW_SHOWN);
+        screenSurface = SDL_GetWindowSurface( AGBE_window );
+        SDL_Renderer* renderer;
+        SDL_Texture* const texture = ::SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,SDL_TEXTUREACCESS_STREAMING, 160, 144);
+    }
     char *filename;
     printf("Welcome to AGBE!\n");
     if(argv[1] == NULL)
@@ -31,39 +43,31 @@ int main(int argc, char** argv)
     printf("Rom Automatically detected from Command Line Arguments.\n");
     filename = argv[1];
     }
-    printf("Loading... Please Wait.\n");
+    // Beginning of rom loading code
+    printf("Loading... Please Wait.\n",filename);
     FILE* rom = fopen(filename, "rb");
-        if (rom == NULL){
-            printf("Failed to Load Rom\n");
-            return false;
-        }
-    fseek(rom, 0, SEEK_END);
-    long rom_size = ftell(rom);
-    rewind(rom);
-    char* rom_buffer = (char*) malloc(sizeof(char) * rom_size);
-        if (rom_buffer == NULL){
-            printf("Failed to allocate memory for ROM\n");
-            return false;
-        }
-    size_t result = fread(rom_buffer, sizeof(char), (size_t)rom_size, rom);
-        if(result != rom_size){
-        printf("Failed to Read Rom\n");
-        return false;
-        }
-    if ((32769) > rom_size){
-            printf("Loading Rom Into Memory.\n");
-            for (int i = 0; i < rom_size; ++i) {
-                memory[i + 0] = (uint8_t)rom_buffer[i];   // Load into memory starting at 0x0000
-            }
-        }
-    else {
-        printf("ROM too large to fit in memory\n");
-        return false;
+    if (rom == NULL)
+    {
+    printf("Rom not detected.");
+    return 1;
     }
+    fseek(rom,0,SEEK_END);
+    rom_size = ftell(rom);
+    rewind(rom);
+    if (rom_size <= 32768)
+    {
+    printf("Rom Size is %i Bytes.\nIt will be compatible with AGBE.\n",rom_size);
+    }
+    if (rom_size > 32768)
+    {
+    printf("Rom Size is larger than 32768 Bytes!\nRom Size is %i Bytes!\nRom is not compatible with AGBE.\nClosing Program.",rom_size);
+    return 1;
+    }
+    fread(memory,rom_size,1,rom);
     fclose(rom);
-    free(rom_buffer);
+    // End of rom loading Code.
     printf("Rom was Successfully loaded.\n");
-    printf("Do you want Debugging printf statements? (y = yes, n = no): "); // Does what it says.
+    printf("Do you want Debugging printf statements? (y = yes, n = no)\nOption: "); // Does what it says.
     cin>>choice;
     if (choice == 'n')
     {
@@ -74,7 +78,7 @@ int main(int argc, char** argv)
     {
     debugging_enabled = true;
     }
-    printf("Do you want Advanced Debugging? (Slow) (y = yes, n = no): "); // Does what it says.
+    printf("Do you want Advanced Debugging? (Slow) (y = yes, n = no)\nOption: "); // Does what it says.
     cin>>choice; // Get Input from User
     if (choice == 'n') // If choice is No
     {
@@ -86,7 +90,7 @@ int main(int argc, char** argv)
     advanced_debugging_enabled = true; // Enables advanced debugging.
     }
     donewithoptions1: // Done with the First set of options.
-    printf("Would you like a Log of all Opcodes, Jumps, etc...?(CAN CREATE MASSIVE FILES! USE AT OWN RISK!) (y = yes, n = no)\n"); // Does what it says.
+    printf("Would you like a Log File?(Creates Massive Files!) (y = yes, n = no)\nOption: "); // Does what it says.
     cin>>choice; // Get input from User.
     if (choice == 'y') // If choice is yes...
     {
@@ -98,7 +102,7 @@ int main(int argc, char** argv)
     log_file_made = false; // Log file is NOT made.
     }
     gbPowerOn(); // Powers on the Gameboy/runs Boot Sequence (Unfinished)
-        test_for_sdl2: // A goto statement for a SDL2 Loop
+        test_for_sdl2: // A goto statement for a SDL2 Loop (is not disabled by sdl_wanted = false.)
         handleRegisters(); // Handles registers
         opcode = memory[pc]; // Sets the next opcode to be executed
         if(debugging_enabled == true) // If the User wants debugging, this code will execute.
@@ -141,16 +145,19 @@ int main(int argc, char** argv)
         fprintf (gamelog, "SP %X%X\n", sp[0], sp[1]); // Does what it says.
         fprintf (gamelog, "CYC %d\n", cycles); // Does what it says.
         }
-        while( SDL_PollEvent( &SDL_EVENT_HANDLING)) // While Event to handle Random Stuff
+        if (sdl_wanted == true)
         {
-        if (SDL_EVENT_HANDLING.type == SDL_QUIT) // If the SDL Window is Closed, close the program.
-        {
-            goto close_the_program; // Closes the Program
-        }
-        else if (SDL_EVENT_HANDLING.type == SDL_KEYDOWN) // If a key is being pressed, handle controls.
-        {
-            handle_controls(); // Handle Controls
-        }
+            while( SDL_PollEvent( &SDL_EVENT_HANDLING)) // While Event to handle Random Stuff
+            {
+            if (SDL_EVENT_HANDLING.type == SDL_QUIT) // If the SDL Window is Closed, close the program.
+            {
+                goto close_the_program; // Closes the Program
+            }
+            else if (SDL_EVENT_HANDLING.type == SDL_KEYDOWN) // If a key is being pressed, handle controls.
+            {
+                handle_controls(); // Handle Controls
+            }
+            }
         }
         if(close_program == true) // If close_program is true, close the program.
         {
@@ -158,8 +165,12 @@ int main(int argc, char** argv)
         }
         goto test_for_sdl2; // End of SDL2 Loop
         close_the_program: // Program Jumps here if close_program is set to true.
+
+        if (sdl_wanted == true)
+        {
         SDL_DestroyWindow( AGBE_window ); // Destroys the SDL2 Window
         SDL_Quit(); // Quits SDL
-        close_program = true; // IDK why this is here but i'm leaving it here for now.
+        }
+        close_program = true; // This serves no purpose, but i'm leaving it here for now.
         return 0; // return 0
 }

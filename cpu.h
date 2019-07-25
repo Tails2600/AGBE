@@ -775,14 +775,24 @@ break;
 
 default:
 invalid_opcode_jump:
+if (opcode != 0xCB)
+{
 printf("\nAn error has Occured\nUnknown Opcode: 0x%X", opcode);
+}
+if (opcode == 0xCB)
+{
+printf("\nAn error has Occured\nUnknown CB Opcode 0x%X", next_opcode);
+}
 printf("\nProgram Counter: 0x%X\n", pc);
 printf("Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
 printf("Cycles: %i\n", cycles);
 printf("Please see errorlog.txt for more details.\n");
-printf("Please see memdump for a full GB mem dump.\n");
+printf("Please see memdump for a full Gameboy RAM Dump.\n");
+if(sdl_wanted == true)
+{
 SDL_DestroyWindow(AGBE_window);
 SDL_Quit();
+}
 close_program = true;
 FILE * mem_dump;
 mem_dump = fopen ("log/memdump", "w+");
@@ -792,6 +802,10 @@ FILE * error_log;
 error_log = fopen ("log/errorlog.txt", "w+");
 fprintf (error_log, "An Unknown Opcode was Encountered.\n");
 fprintf (error_log, "Opcode: 0x%X\n", opcode);
+if (opcode == 0xCB)
+{
+fprintf (error_log, "CB Opcode: 0x%X\n",next_opcode);
+}
 fprintf (error_log, "Program Counter: 0x%X\n", pc);
 fprintf (error_log, "Register A: 0x%X\n", af[0]);
 fprintf (error_log, "Register F: 0x%X\n", af[1]);
