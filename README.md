@@ -17,6 +17,8 @@ This should bring up a Command Prompt located in the directory AGBE is in, if no
 From there, type AGBE or AGBE.exe and this should run AGBE.  
 Optionally, you can also put the name of the rom after AGBE.exe in the command prompt.  
 This will load the rom for you.  
+Also you can optionally create a folder named log where you put AGBE.  
+This will give you log files.  
 ## Running (Linux)
 In the bin/Debug folder, there is a file called AGBE. (NOT AGBE.exe)  
 Download that and put it in a seperate folder.  
@@ -25,6 +27,8 @@ From there, open a terminal and navigate to the place that you put AGBE and the 
 Type ./AGBE and press enter.  
 Optionally, you can also put the name of the rom after ./AGBE in the command prompt.  
 This will load the rom for you.  
+Also you can optionally create a folder named log where you put AGBE.  
+This will give you log files.  
 ## Notes
 Note that the Windows build could possibly be more buggy than the Linux build.  
 Not everything is implemented yet so don't expect everything to work correctly.  
