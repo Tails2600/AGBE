@@ -10,14 +10,31 @@ pc++;
 cycles += 4;
 break;
 
-case 0x1:
+case 0x01:
 bc[0] = memory[pc + 2];
 bc[1] = memory[pc + 1];
 pc += 3;
 cycles += 12;
 break;
 
-case 0x5: // DEC B (Decrease B by 0x01)
+case 0x02:
+bcbuffer = bc[0] << 8 | bc[1];
+memory[bcbuffer] = af[0];
+pc++;
+cycles += 8;
+break;
+
+case 0x03:
+bc[1]++;
+if (bc[1] == 0x00)
+{
+bc[0]++;
+}
+pc++;
+cycles += 8;
+break;
+
+case 0x05: // DEC B (Decrease B by 0x01)
 bc[0]--;
 
 if(bc[0] == 0x00)
@@ -33,23 +50,38 @@ pc++;
 cycles += 4;
 break;
 
-case 0x6: // LD B (Loads the value that is in front of the Current Opcode into B)
+case 0x06:
 bc[0] = memory[pc + 1];
 cycles += 8;
 pc += 2;
 break;
 
-case 0xB:
-bc[1] -= 0x01;
+case 0x08:
+nnbuffer = memory[pc + 2] << 8 | memory[pc + 1];
+memory[nnbuffer + 1] = sp[0];
+memory[nnbuffer] = sp[1];
+pc += 3;
+cycles += 20;
+break;
+
+case 0x0A:
+bcbuffer = bc[0] << 8 | bc[1];
+af[0] = memory[bcbuffer];
+pc++;
+cycles += 8;
+break;
+
+case 0x0B:
+bc[1]--;
 if(bc[1] == 0xFF)
 {
-bc[0] -= 0x01;
+bc[0]--;
 }
 pc++;
 cycles += 8;
 break;
 
-case 0xC:
+case 0x0C:
 bc[1] += 0x01;
 if(bc[1] == 0x00)
 {
@@ -63,7 +95,7 @@ pc++;
 cycles += 4;
 break;
 
-case 0xD:
+case 0x0D:
 bc[1]--;
 if(bc[1] == 0x00)
 {
@@ -78,15 +110,45 @@ pc++;
 cycles += 4;
 break;
 
-case 0xE:
+case 0x0E:
 bc[1] = memory[pc + 1];
 cycles += 8;
 pc += 2;
 break;
 
+case 0x11:
+de[0] = memory[pc + 2];
+de[1] = memory[pc + 1];
+pc += 3;
+cycles += 12;
+break;
+
+case 0x12:
+debuffer = de[0] << 8 | de[1];
+memory[debuffer] = af[0];
+pc++;
+cycles += 8;
+break;
+
+case 0x13:
+de[1]++;
+if (de[1] == 0x00)
+{
+de[0]++;
+}
+pc++;
+cycles += 8;
+break;
+
 case 0x16:
 de[0] = memory[pc + 1];
 pc += 2;
+cycles += 8;
+break;
+
+case 0x18:
+nbuffer = memory[pc + 1];
+pc = pc + nbuffer;
 cycles += 8;
 break;
 
@@ -100,6 +162,29 @@ hl[0]++;
 af[1] = 0x00;
 cycles += 8;
 pc++;
+break;
+
+case 0x1A:
+debuffer = de[0] << 8 | de[1];
+af[0] = memory[debuffer];
+pc++;
+cycles += 8;
+break;
+
+case 0x1B:
+de[1]--;
+if(de[1] == 0xFF)
+{
+de[0]--;
+}
+pc++;
+cycles += 8;
+break;
+
+case 0x1E:
+de[1] = memory[pc + 1];
+cycles += 8;
+pc += 2;
 break;
 
 case 0x20:
@@ -122,6 +207,18 @@ cycles += 12;
 pc += 3;
 break;
 
+case 0x22:
+hlbuffer = hl[0] << 8 | hl[1];
+memory[hlbuffer] = af[0];
+hl[1]++;
+if (hl[1] == 0x00)
+{
+hl[0]++;
+}
+pc++;
+cycles += 8;
+break;
+
 case 0x23:
 hl[1]++;
 if(hl[1] == 0x00)
@@ -130,6 +227,12 @@ hl[0]++;
 }
 pc++;
 cycles += 8;
+break;
+
+case 0x26:
+hl[0] = memory[pc + 1];
+cycles += 8;
+pc += 2;
 break;
 
 case 0x28:
@@ -151,6 +254,22 @@ hl[0] += 0x01;
 }
 cycles += 8;
 pc += 1;
+break;
+
+case 0x2B:
+hl[1]--;
+if(hl[1] == 0xFF)
+{
+hl[0]--;
+}
+pc++;
+cycles += 8;
+break;
+
+case 0x2E:
+hl[1] = memory[pc + 1];
+cycles += 8;
+pc += 2;
 break;
 
 case 0x2F:
@@ -186,6 +305,16 @@ cycles += 8;
 pc++;
 break;
 
+case 0x33:
+sp[1]++;
+if (sp[1] == 0x00)
+{
+sp[0]++;
+}
+pc++;
+cycles += 8;
+break;
+
 case 0x34:
 help0x34 = hl[0] << 8 | hl[1];
 memory[help0x34]++;
@@ -204,6 +333,28 @@ case 0x36:
 memory[hlbuffer] = memory[pc + 1];
 cycles += 12;
 pc += 2;
+break;
+
+case 0x3A:
+hlbuffer = hl[0] << 8 | hl[1];
+af[0] = memory[hlbuffer];
+hl[1]--;
+if (hl[1] == 0xFF)
+{
+hl[0]--;
+}
+pc++;
+cycles += 8;
+break;
+
+case 0x3B:
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+pc++;
+cycles += 8;
 break;
 
 case 0x3C:
@@ -238,8 +389,94 @@ cycles += 8;
 pc += 2;
 break;
 
+case 0x40:
+bc[0] = bc[0];
+pc++;
+cycles += 4;;
+break;
+
+case 0x41:
+bc[0] = bc[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x42:
+bc[0] = de[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x43:
+bc[0] = de[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x44:
+bc[0] = hl[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x45:
+bc[0] = hl[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x46:
+hlbuffer = hl[0] << 8 | hl[1];
+bc[0] = memory[hlbuffer];
+pc++;
+cycles += 8;
+break;
+
 case 0x47:
 bc[0] = af[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x48:
+bc[1] = bc[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x49:
+bc[1] = bc[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x4A:
+bc[1] = de[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x4B:
+bc[1] = de[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x4C:
+bc[1] = hl[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x4D:
+bc[1] = hl[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x4E:
+hlbuffer = hl[0] << 8 | hl[1];
+bc[1] = memory[hlbuffer];
 pc++;
 cycles += 4;
 break;
@@ -250,11 +487,89 @@ pc++;
 cycles += 4;
 break;
 
+case 0x50:
+de[0] = bc[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x51:
+de[0] = bc[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x52:
+de[0] = de[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x53:
+de[0] = de[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x54:
+de[0] = hl[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x55:
+de[0] = hl[1];
+pc++;
+cycles += 4;
+break;
+
 case 0x56:
 hlbuffer = hl[0] << 8 | hl[1];
 de[0] = memory[hlbuffer];
 cycles += 8;
 pc++;
+break;
+
+case 0x57:
+de[0] = af[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x58:
+de[1] = bc[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x59:
+de[1] = bc[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x5A:
+de[1] = de[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x5B:
+de[1] = de[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x5C:
+de[1] = hl[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x5D:
+de[1] = hl[1];
+pc++;
+cycles += 4;
 break;
 
 case 0x5E:
@@ -270,6 +585,154 @@ pc++;
 cycles += 4;
 break;
 
+case 0x60:
+hl[0] = bc[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x61:
+hl[0] = bc[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x62:
+hl[0] = de[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x63:
+hl[0] = de[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x64:
+hl[0] = hl[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x65:
+hl[0] = hl[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x66:
+hlbuffer = hl[0] << 8 | hl[1];
+hl[0] = memory[hlbuffer];
+pc++;
+cycles += 8;
+break;
+
+case 0x67:
+hl[0] = af[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x68:
+hl[1] = bc[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x69:
+hl[1] = bc[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x6A:
+hl[1] = de[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x6B:
+hl[1] = de[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x6C:
+hl[1] = hl[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x6D:
+hl[1] = hl[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x6E:
+hlbuffer = hl[0] << 8 | hl[1];
+hl[1] = memory[hlbuffer];
+pc++;
+cycles += 8;
+break;
+
+case 0x6F:
+hl[1] = af[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x70:
+hlbuffer = hl[0] << 8 | hl[1];
+memory[hlbuffer] = bc[0];
+pc++;
+cycles += 8;
+break;
+
+case 0x71:
+hlbuffer = hl[0] << 8 | hl[1];
+memory[hlbuffer] = bc[1];
+pc++;
+cycles += 8;
+break;
+
+case 0x72:
+hlbuffer = hl[0] << 8 | hl[1];
+memory[hlbuffer] = de[0];
+pc++;
+cycles += 8;
+break;
+
+case 0x73:
+hlbuffer = hl[0] << 8 | hl[1];
+memory[hlbuffer] = de[1];
+pc++;
+cycles += 8;
+break;
+
+case 0x74:
+hlbuffer = hl[0] << 8 | hl[1];
+memory[hlbuffer] = hl[0];
+pc++;
+cycles += 8;
+break;
+
+case 0x75:
+hlbuffer = hl[0] << 8 | hl[1];
+memory[hlbuffer] = hl[1];
+pc++;
+cycles += 8;
+break;
+
+case 0x77:
+hlbuffer = hl[0] << 8 | hl[1];
+memory[hlbuffer] = af[0];
+pc++;
+cycles += 8;
+break;
+
+
 case 0x78:
 af[0] = bc[0];
 pc++;
@@ -278,6 +741,43 @@ break;
 
 case 0x79:
 af[0] = bc[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x7A:
+af[0] = de[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x7B:
+af[0] = de[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x7C:
+af[0] = hl[0];
+pc++;
+cycles += 4;
+break;
+
+case 0x7D:
+af[0] = hl[1];
+pc++;
+cycles += 4;
+break;
+
+case 0x7E:
+hlbuffer = hl[0] << 8 | hl[1];
+af[0] = memory[hlbuffer];
+pc++;
+cycles += 8;
+break;
+
+case 0x7F:
+af[0] = af[0];
 pc++;
 cycles += 4;
 break;
@@ -651,7 +1151,6 @@ case 0xE9:
 hlbuffer = hl[0] << 8 | hl[1];
 pc = hlbuffer;
 cycles += 4;
-//advanced_debugging_enabled = true;
 break;
 
 case 0xEA:
@@ -739,6 +1238,13 @@ spbuffer = sp[0] << 8 | sp[1];
 memory[spbuffer] = af[1];
 pc++;
 cycles += 16;
+break;
+
+case 0xF9:
+sp[0] = hl[0];
+sp[1] = hl[1];
+pc++;
+cycles += 8;
 break;
 
 case 0xFA:

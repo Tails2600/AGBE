@@ -12,7 +12,11 @@ unsigned char de[2];
 unsigned char sp[2];
 bool ime;
 // Helper Variables
+unsigned int bcbuffer;
+unsigned int debuffer;
 unsigned int hlbuffer;
+unsigned int nnbuffer;
+unsigned int nbuffer;
 unsigned int spbuffer;
 bool close_program;
 char a;
