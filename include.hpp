@@ -95,7 +95,28 @@ SDL_Window* AGBE_window = NULL;
 SDL_Surface* screenSurface = NULL;
 SDL_Renderer* renderer;
 SDL_Texture *texture;
-SDL_Color color_white = {255, 255, 255, 0}; // White
+int current_x_pixel;
+int current_y_pixel;
+std::bitset<8> MEMVRAMbitbuffer;
+std::bitset<8> MEMVRAMbitbuffer2; // This should always hold the value after MEMVRAMbitbuffer.
+int current_tile;
+int current_tile_location;
+int current_tile_data_location;
+int compare_pixels_result;
+int bitset_id_counter;
+int current_drawing_x_tile;
+int current_drawing_x_tile_plus1;
+int current_drawing_y_tile;
+int current_drawing_y_tile_plus1;
+int tile_x_counter_for_pixelx;
+int tile_y_counter_for_pixely;
+int tile_x_counter_for_pixelx_plus1;
+int tile_y_counter_for_pixely_plus1;
+// SDL2 Color Palletes
+SDL_Color color_black = {0,0,0,0}; // Black (3)
+SDL_Color color_darkgrey = {0x76, 0x76, 0x76, 0}; // Dark Gray (2)
+SDL_Color color_lightgrey = {0xC2, 0xC2, 0xC2, 0}; // Light Grey (1)
+SDL_Color color_white = {255, 255, 255, 0}; // White (0)
 
 
 // Other Functions

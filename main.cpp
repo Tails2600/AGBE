@@ -131,7 +131,7 @@ int main(int argc, char** argv)
         }
         if(sdl_wanted == true) // Handles Rendering
         {
-        if(VBlank_Interupt_Needs_Done == true)
+        if(pc == 0x036E)
         {
         RenderFrame(); // Renders a frame
         }
