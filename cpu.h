@@ -34,6 +34,19 @@ pc++;
 cycles += 8;
 break;
 
+case 0x04:
+bc[0]++;
+if(bc[0] == 0x00)
+{
+af[1] = 0x80;
+goto done0x04;
+}
+af[1] = 0x00;
+done0x04:
+cycles += 4;
+pc++;
+break;
+
 case 0x05: // DEC B (Decrease B by 0x01)
 bc[0]--;
 
@@ -179,6 +192,19 @@ de[0]--;
 }
 pc++;
 cycles += 8;
+break;
+
+case 0x1C:
+de[1]++;
+if(de[1] == 0x00)
+{
+af[1] = 0x80;
+goto done0x1C;
+}
+af[1] = 0x00;
+done0x1C:
+cycles += 4;
+pc++;
 break;
 
 case 0x1E:
@@ -1316,7 +1342,9 @@ break;
 
 case 0xFA:
 nn = memory[pc + 2] << 8 | memory[pc + 1];
-af[0] = memory[nn];
+printf("nn:0x%X\n",nn);
+af[0] = memory[nn - 0xFFFF0000];
+printf("a:0x%X\n",af[0]);
 pc += 3;
 cycles += 16;
 break;

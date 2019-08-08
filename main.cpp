@@ -114,12 +114,12 @@ int main(int argc, char** argv)
         previous_opcode = opcode; // A variable to keep track of the previous opcode that was executed.
         next_opcode = memory[pc + 0x01];
         doOpcode(); // Runs 1 Opcode
-
+        /*
         if (help0xC92 == 0x49)
         {
         advanced_debugging_enabled = true;
         }
-
+        */
         if (cycles % 344 == 0) //This setup is hacky and will be replaced in the distant future.
         {
         memory[0xFF44]++;

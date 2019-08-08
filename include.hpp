@@ -65,7 +65,7 @@ unsigned char previous_opcode;
 unsigned char next_opcode;
 int64_t cycles;
 unsigned char opnn[2]; // JP
-int16_t nn = 0x0000;
+int16_t nn = 0x00000000;
 // Variables that have Nothing to do with the Emulation of the Gameboy
 int rom_size;
 bool sdl_wanted;
