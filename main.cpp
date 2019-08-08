@@ -26,8 +26,8 @@ int main(int argc, char** argv)
         }
         AGBE_window = SDL_CreateWindow("AGBE", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160, 144, SDL_WINDOW_SHOWN);
         screenSurface = SDL_GetWindowSurface( AGBE_window );
-        SDL_Renderer* renderer;
-        SDL_Texture* const texture = ::SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,SDL_TEXTUREACCESS_STREAMING, 160, 144);
+        renderer = SDL_CreateRenderer(AGBE_window, -1, SDL_RENDERER_SOFTWARE);
+
     }
     char *filename;
     printf("Welcome to AGBE!\n");
@@ -128,6 +128,23 @@ int main(int argc, char** argv)
         {
         VBlank_Interupt_Needs_Done = true;
         }
+        if(sdl_wanted == true)
+        {
+        //pixeltestcounter = 23040;
+        //testforpixel:
+        //if (pixeltestcounter != 0)
+        //{
+        //pixels[pixeltestcounter] = 0xFF00FFFF;
+        //printf("pix:%i",pixeltestcounter);
+        //pixeltestcounter--;
+        //goto testforpixel;
+
+        SDL_UpdateTexture(texture , NULL, pixels, 160 * sizeof (uint32_t)); // 160 width?
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, texture , NULL, NULL);
+        //SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        SDL_RenderPresent(renderer);
+        }
         handleInterupts();  // Handles Interupts
         if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.
         {
@@ -200,7 +217,11 @@ int main(int argc, char** argv)
         }
         goto test_for_sdl2; // End of SDL2 Loop
         close_the_program: // Program Jumps here if close_program is set to true.
-
+printf("\nProgram Counter: 0x%X\n", pc);
+printf("Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
+printf("Cycles: %i\n", cycles);
+printf("Please see errorlog.txt for more details.\n");
+printf("Please see memdump for a full Gameboy RAM Dump.\n");
         if (sdl_wanted == true)
         {
         SDL_DestroyWindow( AGBE_window ); // Destroys the SDL2 Window

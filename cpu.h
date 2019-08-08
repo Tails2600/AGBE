@@ -163,6 +163,7 @@ case 0x18:
 nbuffer = memory[pc + 1];
 pc = pc + nbuffer;
 cycles += 8;
+pc += 2;
 break;
 
 case 0x19:
@@ -292,6 +293,19 @@ pc++;
 cycles += 8;
 break;
 
+case 0x2C:
+hl[1]++;
+if(hl[1] == 0x00)
+{
+af[1] = 0x80;
+goto done0x2C;
+}
+af[1] = 0x00;
+done0x2C:
+cycles += 4;
+pc++;
+break;
+
 case 0x2E:
 hl[1] = memory[pc + 1];
 cycles += 8;
@@ -353,6 +367,20 @@ af[1] = 0x00;
 done0x34:
 cycles += 12;
 pc++;
+break;
+
+case 0x35:
+nn = hl[0] << 8 | hl[1];
+memory[nn]--;
+Fbitbuffer = af[1];
+if (memory[nn] == 0x00)
+{
+Fbitbuffer[7] = 1;
+}
+Fbitbuffer[6] = 1;
+af[1] = Fbitbuffer.to_ulong();
+pc++;
+cycles += 12;
 break;
 
 case 0x36:
@@ -1017,6 +1045,26 @@ if(sp[1] == 0x00 || sp[1] == 0x01)
 sp[0] += 0x01;
 }
 cycles += 8;
+break;
+
+case 0xCA:
+Fbitbuffer = af[1];
+if (Fbitbuffer[7] == 1)
+{
+opnn[0] = memory[pc + 2];
+opnn[1] = memory[pc + 1];
+nn = opnn[0] << 8 | opnn[1];
+pc = nn;
+cycles += 12;
+goto done0xCA;
+}
+if (Fbitbuffer[7] == 0)
+{
+pc += 3;
+cycles += 12;
+goto done0xCA;
+}
+done0xCA:
 break;
 
 case 0xCB:

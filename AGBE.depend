@@ -363,24 +363,24 @@
 	"begin_code.h"
 	"close_code.h"
 
-1565229190 source:/home/zach/codeblocks/AGBE/main.cpp
+1565241842 source:/home/zach/codeblocks/AGBE/main.cpp
 	"cpu.h"
 
-1565229521 /home/zach/codeblocks/AGBE/cpu.h
+1565234589 /home/zach/codeblocks/AGBE/cpu.h
 	"controls.hpp"
 	<time.h>
 
-1563562069 /home/zach/codeblocks/AGBE/controls.hpp
+1565238296 /home/zach/codeblocks/AGBE/controls.hpp
 	<SDL2/SDL.h>
 	"interupts.hpp"
 
-1552925213 /home/zach/codeblocks/AGBE/interupts.hpp
+1565238199 /home/zach/codeblocks/AGBE/interupts.hpp
 	"timers.hpp"
 
 1552842601 /home/zach/codeblocks/AGBE/timers.hpp
 	"include.hpp"
 
-1565228872 /home/zach/codeblocks/AGBE/include.hpp
+1565238584 /home/zach/codeblocks/AGBE/include.hpp
 	<bits/stdc++.h>
 	<stdio.h>
 	<iostream>

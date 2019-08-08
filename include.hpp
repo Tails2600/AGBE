@@ -25,6 +25,7 @@ std::bitset<8> Bbitbuffer;
 std::bitset<8> Cbitbuffer;
 std::bitset<8> Dbitbuffer;
 std::bitset<8> Ebitbuffer;
+std::bitset<8> Fbitbuffer;
 std::bitset<8> Hbitbuffer;
 std::bitset<8> Lbitbuffer;
 std::bitset<8> MEMbitbuffer;
@@ -49,7 +50,6 @@ int8_t help0xCD3;
 unsigned short help0xCD4;
 int8_t help0xC9;
 uint8_t help0xC92;
-//unsigned uint16_t help0xC93;
 unsigned char help0xC94;
 std::bitset<1> help0x28;
 std::bitset<1> help0xC0;
@@ -86,8 +86,14 @@ bool VBlank_Interupt_Needs_Done;
 std::bitset<8> FF0F_Interupt_Value2;
 // Variables used for Testing
 int testingn;
-
-
+uint32_t pixeltestcounter;
+// SDL2 Stuff
+uint32_t* pixels = new uint32_t[160*144];
+SDL_Event SDL_EVENT_HANDLING;
+SDL_Window* AGBE_window = NULL;
+SDL_Surface* screenSurface = NULL;
+SDL_Renderer* renderer;
+SDL_Texture* const texture = ::SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,SDL_TEXTUREACCESS_STREAMING, 160, 144);
 
 
 // Other Functions

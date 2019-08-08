@@ -1,8 +1,6 @@
 #include <SDL2/SDL.h>
 #include "interupts.hpp"
-SDL_Event SDL_EVENT_HANDLING;
-SDL_Window* AGBE_window = NULL;
-SDL_Surface* screenSurface = NULL;
+
 void handle_controls()
 {
 memory[0xFF80] = 0x00;
