@@ -4,6 +4,7 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
+    AGBE_version = 0.1;
     printf("Before we begin, do you want to enable SDL2? (y = yes, n = no)\nSDL2 is for Graphics and Input, which aren't implemented yet.\nOption: ");
     cin>>choice;
     if (choice == 'y')
@@ -26,8 +27,8 @@ int main(int argc, char** argv)
         }
         AGBE_window = SDL_CreateWindow("AGBE", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160, 144, SDL_WINDOW_SHOWN);
         screenSurface = SDL_GetWindowSurface( AGBE_window );
-        renderer = SDL_CreateRenderer(AGBE_window, -1, SDL_RENDERER_SOFTWARE);
-
+        renderer = SDL_CreateRenderer(AGBE_window, -1, SDL_RENDERER_ACCELERATED);
+        texture = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_TARGET,160,144);
     }
     char *filename;
     printf("Welcome to AGBE!\n");
@@ -128,22 +129,12 @@ int main(int argc, char** argv)
         {
         VBlank_Interupt_Needs_Done = true;
         }
-        if(sdl_wanted == true)
+        if(sdl_wanted == true) // Handles Rendering
         {
-        //pixeltestcounter = 23040;
-        //testforpixel:
-        //if (pixeltestcounter != 0)
-        //{
-        //pixels[pixeltestcounter] = 0xFF00FFFF;
-        //printf("pix:%i",pixeltestcounter);
-        //pixeltestcounter--;
-        //goto testforpixel;
-
-        SDL_UpdateTexture(texture , NULL, pixels, 160 * sizeof (uint32_t)); // 160 width?
-        SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, texture , NULL, NULL);
-        //SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        SDL_RenderPresent(renderer);
+        if(VBlank_Interupt_Needs_Done == true)
+        {
+        RenderFrame(); // Renders a frame
+        }
         }
         handleInterupts();  // Handles Interupts
         if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.

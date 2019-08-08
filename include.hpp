@@ -74,6 +74,7 @@ bool debugging_enabled;
 bool advanced_debugging_enabled;
 bool log_file_made;
 int Operating_System;
+int AGBE_version;
 // Variables used for Logging
 FILE * gamelog;
 // Variables that help with Interupt Processing
@@ -93,7 +94,8 @@ SDL_Event SDL_EVENT_HANDLING;
 SDL_Window* AGBE_window = NULL;
 SDL_Surface* screenSurface = NULL;
 SDL_Renderer* renderer;
-SDL_Texture* const texture = ::SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,SDL_TEXTUREACCESS_STREAMING, 160, 144);
+SDL_Texture *texture;
+SDL_Color color_white = {255, 255, 255, 0}; // White
 
 
 // Other Functions
