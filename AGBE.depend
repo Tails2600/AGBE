@@ -363,10 +363,10 @@
 	"begin_code.h"
 	"close_code.h"
 
-1564086525 source:/home/zach/codeblocks/AGBE/main.cpp
+1565227713 source:/home/zach/codeblocks/AGBE/main.cpp
 	"cpu.h"
 
-1564118355 /home/zach/codeblocks/AGBE/cpu.h
+1565227842 /home/zach/codeblocks/AGBE/cpu.h
 	"controls.hpp"
 	<time.h>
 
@@ -380,7 +380,7 @@
 1552842601 /home/zach/codeblocks/AGBE/timers.hpp
 	"include.hpp"
 
-1564118202 /home/zach/codeblocks/AGBE/include.hpp
+1565227842 /home/zach/codeblocks/AGBE/include.hpp
 	<bits/stdc++.h>
 	<stdio.h>
 	<iostream>

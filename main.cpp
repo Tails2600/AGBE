@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     filename = argv[1];
     }
     // Beginning of rom loading code
-    printf("Loading... Please Wait.\n",filename);
+    printf("Loading... Please Wait.\n");
     FILE* rom = fopen(filename, "rb");
     if (rom == NULL)
     {
@@ -107,11 +107,27 @@ int main(int argc, char** argv)
         opcode = memory[pc]; // Sets the next opcode to be executed
         if(debugging_enabled == true) // If the User wants debugging, this code will execute.
         {
+        printf("\nPC: 0x%X", pc);
         printf("\nOpcode: 0x%X", opcode);  // Does what it says.
+        printf("\nA: 0x%X",af[0]);
         }
         previous_opcode = opcode; // A variable to keep track of the previous opcode that was executed.
         next_opcode = memory[pc + 0x01];
         doOpcode(); // Runs 1 Opcode
+
+        if (help0xC92 == 0x49)
+        {
+        advanced_debugging_enabled = true;
+        }
+
+        if (cycles % 344 == 0) //This setup is hacky and will be replaced in the distant future.
+        {
+        memory[0xFF44]++;
+        }
+        if (cycles == 411512) //This setup is hacky and will be replaced in the distant future.
+        {
+        VBlank_Interupt_Needs_Done = true;
+        }
         handleInterupts();  // Handles Interupts
         if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.
         {
@@ -127,8 +143,27 @@ int main(int argc, char** argv)
         printf("\nPC_flag: 0x%X", pc); // Does what it says.
         printf("\nSP_flag: 0x%X%X", sp[0], sp[1]); // Does what it says.
         printf("\nMem_Joypad: 0x%X", memory[0xFF00]); // Does what it says.
+        printf("\nCycles: %i\n",cycles);
         printf("\nContinue? (Y or N):"); // This option doesn't make a difference.  It's just here to make a sort of STEP Function.
         cin>>choice;
+        if(choice == 'n')
+        {
+        printf("\nProgram Counter: 0x%X\n", pc);
+        printf("Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
+        printf("Cycles: %i\n", cycles);
+        printf("Please see errorlog.txt for more details.\n");
+        printf("Please see memdump for a full Gameboy RAM Dump.\n");
+        if(sdl_wanted == true)
+        {
+        SDL_DestroyWindow(AGBE_window);
+        SDL_Quit();
+        }
+        close_program = true;
+        FILE * mem_dump;
+        mem_dump = fopen ("log/memdump", "w+");
+        fwrite (memory , sizeof(char), sizeof(memory), mem_dump);
+        fclose (mem_dump);
+        }
         }
         if (log_file_made == true)  // If User wants a log file, then this will write stuff to it.
         {

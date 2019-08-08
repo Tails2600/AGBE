@@ -188,16 +188,16 @@ pc += 2;
 break;
 
 case 0x20:
+pc +=2;
 if(af[1] != 0x80 && af[1] != 0xC0 && af[1] != 0xA0 && af[1] != 0x90 && af[1] != 0xE0 && af[1] != 0xB0 && af[1] != 0xD0 && af[1] != 0xF0)
 {
 cycles += 8;
-pc = pc + memory[pc + 1];
+pc = pc + memory[pc - 1];
 }
 if(af[1] == 0x80 || af[1] == 0xC0 || af[1] == 0xA0 || af[1] == 0x90 || af[1] == 0xE0 || af[1] == 0xB0 || af[1] == 0xD0 || af[1] == 0xF0)
 {
 cycles += 8;
 }
-pc +=2;
 break;
 
 case 0x21:
@@ -981,7 +981,10 @@ case 0xC9:
 nn = sp[0] << 8 | sp[1];
 help0xC92 = memory[nn - 0xFFFF0000];
 help0xC9 = memory[(nn - 0xFFFF0000) + 1];
+printf("help0xC9: 0x%X\n", help0xC9);
+printf("help0xC92: 0x%X\n", help0xC92);
 pc = help0xC9 << 8 | help0xC92;
+printf("pc: 0x%X\n",pc);
 sp[1] += 0x02;
 if(sp[1] == 0x00 || sp[1] == 0x01)
 {
@@ -993,26 +996,90 @@ break;
 case 0xCB:
 switch(next_opcode)
 {
+    case 0x37:
+    af[0] = ( (af[0] & 0x0F) << 4 | (af[0] & 0xF0) >> 4 );
+    if (af[0] == 0x00)
+    {
+    af[1] = 0x80;
+    }
+    if (af[0] != 0x00)
+    {
+    af[1] = 0x00;
+    }
+    cycles += 8;
+    pc += 2;
+    break; // Ends 0xCB37 Case
 
-case 0x37:
-af[0] = ( (af[0] & 0x0F) << 4 | (af[0] & 0xF0) >> 4 );
-if (af[0] == 0x00)
-{
-af[1] = 0x80;
-}
-if (af[0] != 0x00)
-{
-af[1] = 0x00;
-}
-cycles += 8;
-pc += 2;
-break; // Ends 0xCB37 Case
+    case 0x80:
+    Bbitbuffer = bc[0];
+    Bbitbuffer.reset(0);
+    bc[0] = Bbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
 
-default:
-goto invalid_opcode_jump;
-break;
-}
-break; // Ends entire 0xCB Case
+    case 0x81:
+    Cbitbuffer = bc[1];
+    Cbitbuffer.reset(0);
+    bc[1] = Cbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    case 0x82:
+    Dbitbuffer = de[0];
+    Dbitbuffer.reset(0);
+    de[0] = Dbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    case 0x83:
+    Ebitbuffer = de[1];
+    Ebitbuffer.reset(0);
+    de[1] = Ebitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    case 0x84:
+    Hbitbuffer = hl[0];
+    Hbitbuffer.reset(0);
+    hl[0] = Hbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    case 0x85:
+    Lbitbuffer = hl[1];
+    Lbitbuffer.reset(0);
+    hl[1] = Lbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    case 0x86:
+    hlbuffer = hl[0] << 8 | hl[1];
+    MEMbitbuffer = memory[hlbuffer];
+    MEMbitbuffer.reset(0);
+    memory[hlbuffer] = MEMbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    case 0x87:
+    Abitbuffer = af[0];
+    Abitbuffer.reset(0);
+    af[0] = Abitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    default:
+    goto invalid_opcode_jump;
+    break;
+    }
+    break; // Ends entire 0xCB Case
 
 case 0xCD:
 help0xCD3 = sp[0];
@@ -1070,7 +1137,7 @@ case 0xD9:
 help0xE1 = sp[0] << 8 | sp[1];
 help0xD9[0] = memory[help0xE1 + 1];
 help0xD9[1] = memory[help0xE1];
-pc = help0xD9[0] << 8 | help0xD9[1];
+pc = (help0xD9[0] - 0xFFFFFF00) << 8 | (help0xD9[1] - 0xFFFFFF00);
 sp[1] += 2;
 if(sp[1] == 0x00 | sp[1] == 0x01)
 {
@@ -1181,14 +1248,14 @@ if(sp[1] == 0xFF)
 sp[0]--;
 }
 spbuffer = sp[0] << 8 | sp[1];
-memory[spbuffer] = help0xEF2;
+memory[spbuffer] = (help0xEF2 - 0xFFFFFF00);
 sp[1]--;
 if(sp[1] == 0xFF)
 {
 sp[0]--;
 }
 spbuffer = sp[0] << 8 | sp[1];
-memory[spbuffer] = help0xEF; // End of copying current PC to mem at SP
+memory[spbuffer] = (help0xEF - 0xFFFFFF00); // End of copying current PC to mem at SP
 pc = 0x0028;
 cycles += 32;
 break;
@@ -1265,7 +1332,7 @@ pc++;
 break;
 
 case 0xFE:
-if(af[0] == memory[pc + 1])
+if(af[0] == (memory[pc + 1] - 0xFFFFFF00))
 {
 af[1] = 0xC0;
 goto done0xFE;
