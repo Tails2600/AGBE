@@ -112,6 +112,7 @@ int tile_x_counter_for_pixelx;
 int tile_y_counter_for_pixely;
 int tile_x_counter_for_pixelx_plus1;
 int tile_y_counter_for_pixely_plus1;
+bool thingforSDL2render;
 // SDL2 Color Palletes
 SDL_Color color_black = {0,0,0,0}; // Black (3)
 SDL_Color color_darkgrey = {0x76, 0x76, 0x76, 0}; // Dark Gray (2)

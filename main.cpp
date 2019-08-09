@@ -134,6 +134,7 @@ int main(int argc, char** argv)
         if(pc == 0x036E)
         {
         RenderFrame(); // Renders a frame
+        printf("main");
         }
         }
         handleInterupts();  // Handles Interupts
