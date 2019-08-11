@@ -5,7 +5,7 @@ using namespace std;
 int main(int argc, char** argv)
 {
     AGBE_version = 0.1;
-    printf("Before we begin, do you want to enable SDL2? (y = yes, n = no)\nSDL2 is for Graphics and Input, which aren't implemented yet.\nOption: ");
+    printf("Before we begin, do you want to enable SDL2? (y = yes, n = no)\nSDL2 is for Graphics and Input.\nOption: ");
     cin>>choice;
     if (choice == 'y')
     {
@@ -29,6 +29,7 @@ int main(int argc, char** argv)
         screenSurface = SDL_GetWindowSurface( AGBE_window );
         renderer = SDL_CreateRenderer(AGBE_window, -1, SDL_RENDERER_ACCELERATED);
         texture = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_TARGET,160,144);
+
     }
     char *filename;
     printf("Welcome to AGBE!\n");
@@ -131,11 +132,12 @@ int main(int argc, char** argv)
         }
         if(sdl_wanted == true) // Handles Rendering
         {
-        if(pc == 0x036E)
+
+        if(cycles > 700000) // This is just set here for testing purposes.
         {
         RenderFrame(); // Renders a frame
-        printf("main");
         }
+
         }
         handleInterupts();  // Handles Interupts
         if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.

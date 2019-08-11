@@ -100,6 +100,8 @@ int current_y_pixel;
 std::bitset<8> MEMVRAMbitbuffer;
 std::bitset<8> MEMVRAMbitbuffer2; // This should always hold the value after MEMVRAMbitbuffer.
 int current_tile;
+int current_x_tile;
+int current_y_tile;
 int current_tile_location;
 int current_tile_data_location;
 int compare_pixels_result;
