@@ -21,49 +21,63 @@ if (MEMVRAMbitbuffer[bitset_id_counter] == 0 && MEMVRAMbitbuffer2[bitset_id_coun
 {
 setdrawcolor_white();
 compare_pixels_result = 0;
-printf("white\n");
 }
 if (MEMVRAMbitbuffer[bitset_id_counter] == 0 && MEMVRAMbitbuffer2[bitset_id_counter == 1])
 {
 setdrawcolor_lightgrey();
 compare_pixels_result = 1;
-printf("lightgrey\n");
 }
 if (MEMVRAMbitbuffer[bitset_id_counter] == 1 && MEMVRAMbitbuffer2[bitset_id_counter] == 0)
 {
 setdrawcolor_darkgrey();
 compare_pixels_result = 2;
-printf("darkgrey\n");
 }
 if (MEMVRAMbitbuffer[bitset_id_counter] == 1 && MEMVRAMbitbuffer2[bitset_id_counter] == 1)
 {
 setdrawcolor_black();
 compare_pixels_result = 3;
-printf("black\n");
 }
 
 }
-
-void RenderFrame()
+void RenderTile(int xtile, int ytile)
 {
-current_x_pixel = 0;
-current_y_pixel = 0;
+current_x_pixel = 8 * xtile;
 bitset_id_counter = 7;
-current_tile_data_location = 0x8270;
-
-
-
-
+current_y_pixel = 8 * ytile;
+current_tile_location = (0x9800 + (xtile * 0x01) + (ytile * 0x20));
+if
+(
+current_tile_location == 0x9814 ||
+current_tile_location == 0x9834 ||
+current_tile_location == 0x9854 ||
+current_tile_location == 0x9874 ||
+current_tile_location == 0x9894 ||
+current_tile_location == 0x98B4 ||
+current_tile_location == 0x98D4 ||
+current_tile_location == 0x98F4 ||
+current_tile_location == 0x9914 ||
+current_tile_location == 0x9934 ||
+current_tile_location == 0x9954 ||
+current_tile_location == 0x9974 ||
+current_tile_location == 0x9994 ||
+current_tile_location == 0x99B4 ||
+current_tile_location == 0x99D4 ||
+current_tile_location == 0x99F4 ||
+current_tile_location == 0x9A14 ||
+current_tile_location == 0x9A34
+)
+{
+current_tile_location == current_tile_location + 12;
+}
+current_tile = memory[current_tile_location];
+current_tile_data_location = 0x8000 + ((current_tile - 0xFFFFFF00) * 0x10);
+if(current_tile_data_location > 0x9000)
+{
+current_tile_data_location -= 0x1000;
+}
 rendernewpixel:
 MEMVRAMbitbuffer = memory[current_tile_data_location];
 MEMVRAMbitbuffer2 = memory[current_tile_data_location + 1];
-printf("memvram1: 0x%X",MEMVRAMbitbuffer);
-printf("memvram2: 0x%X",MEMVRAMbitbuffer2);
-
-
-
-
-
 compare_pixels();
 SDL_RenderDrawPoint(renderer,current_x_pixel,current_y_pixel);
 current_x_pixel++;
@@ -76,18 +90,35 @@ current_y_pixel++;
 current_tile_data_location += 0x02;
     if (current_y_pixel % 8 == 0) // Done Drawing Tile
     {
-    goto donerendering;
+    goto donerenderingtile;
     }
-
-
 }
-SDL_RenderPresent(renderer);
 goto rendernewpixel;
+donerenderingtile:
+dummyvalue++; // This is just here so the compiler doesn't complain about the last function being a goto related thing.
+}
 
-
-
-
-
-donerendering:
+void RenderFrame()
+{
+current_x_tile = 0;
+current_y_tile = 0;
+renderNextTile:
+if (current_x_tile < 21)
+{
+RenderTile(current_x_tile,current_y_tile);
+current_x_tile++;
+    if (current_y_tile == 19)
+    {
+    goto doneRenderingFrame;
+    }
+goto renderNextTile;
+}
+if (current_x_tile == 21)
+{
+current_y_tile++;
+current_x_tile = 0;
+goto renderNextTile;
+}
+doneRenderingFrame:
 SDL_RenderPresent(renderer);
 }

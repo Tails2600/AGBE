@@ -1,4 +1,4 @@
 #include "graphics.hpp"
-void handleTimers()
+void handleTimers() // Does nothing right now
 {
 }

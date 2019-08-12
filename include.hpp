@@ -74,7 +74,7 @@ bool debugging_enabled;
 bool advanced_debugging_enabled;
 bool log_file_made;
 int Operating_System;
-int AGBE_version;
+char AGBE_version[30];
 // Variables used for Logging
 FILE * gamelog;
 // Variables that help with Interupt Processing
@@ -88,6 +88,8 @@ std::bitset<8> FF0F_Interupt_Value2;
 // Variables used for Testing
 int testingn;
 uint32_t pixeltestcounter;
+int dummyvalue;
+char dummychar;
 // SDL2 Stuff
 uint32_t* pixels = new uint32_t[160*144];
 SDL_Event SDL_EVENT_HANDLING;
@@ -99,11 +101,12 @@ int current_x_pixel;
 int current_y_pixel;
 std::bitset<8> MEMVRAMbitbuffer;
 std::bitset<8> MEMVRAMbitbuffer2; // This should always hold the value after MEMVRAMbitbuffer.
-int current_tile;
+unsigned char current_tile;
 int current_x_tile;
 int current_y_tile;
 int current_tile_location;
 int current_tile_data_location;
+int current_tile_data_location_placeholder;
 int compare_pixels_result;
 int bitset_id_counter;
 int current_drawing_x_tile;

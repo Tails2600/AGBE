@@ -153,6 +153,19 @@ pc++;
 cycles += 8;
 break;
 
+case 0x14:
+de[0]++;
+if(de[0] == 0x00)
+{
+af[1] = 0x80;
+goto done0x14;
+}
+af[1] = 0x00;
+done0x14:
+cycles += 4;
+pc++;
+break;
+
 case 0x16:
 de[0] = memory[pc + 1];
 pc += 2;
@@ -254,6 +267,19 @@ hl[0]++;
 }
 pc++;
 cycles += 8;
+break;
+
+case 0x24:
+hl[0]++;
+if(hl[0] == 0x00)
+{
+af[1] = 0x80;
+goto done0x24;
+}
+af[1] = 0x00;
+done0x24:
+cycles += 4;
+pc++;
 break;
 
 case 0x26:
@@ -371,9 +397,9 @@ break;
 
 case 0x35:
 nn = hl[0] << 8 | hl[1];
-memory[nn]--;
+memory[(nn - 0xFFFF0000)]--;
 Fbitbuffer = af[1];
-if (memory[nn] == 0x00)
+if (memory[(nn - 0xFFFF0000)] == 0x00)
 {
 Fbitbuffer[7] = 1;
 }
@@ -992,6 +1018,36 @@ pc = nn;
 cycles += 4;
 break;
 
+case 0xC4:
+Abitbuffer = af[1];
+if(Abitbuffer[7] == 0)
+{
+help0xCD3 = sp[0];
+nn = help0xCD3 << 8 | sp[1];
+help0xCD = (pc + 0x3) >> 8;
+help0xCD2 = (pc + 0x3);
+memory[(nn - 0xFFFF0000) - 0x02] = help0xCD2;
+memory[(nn - 0xFFFF0000) - 0x01] = help0xCD;
+opnn[0] = memory[pc + 2];
+opnn[1] = memory[pc + 1];
+nn = opnn[0] << 8 | opnn[1];
+help0xCD4 = nn;
+pc = help0xCD4;
+sp[1] -= 0x02;
+if(sp[1] == 0xFF || sp[1] == 0xFE)
+{
+sp[0] -= 0x01;
+}
+cycles += 12;
+goto done0xC4;
+}
+pc += 3;
+cycles += 12;
+
+
+done0xC4:
+break;
+
 case 0xC5:
 sp[1]--;
 if(sp[1] == 0xFF)
@@ -1009,6 +1065,20 @@ spbuffer = sp[0] << 8 | sp[1];
 memory[spbuffer] = bc[1];
 pc++;
 cycles += 16;
+break;
+
+case 0xC6:
+af[0] = af[0] + memory[pc + 1];
+if(af[0] == 0x00)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x00)
+{
+af[1] = 0x00;
+}
+pc += 2;
+cycles += 8;
 break;
 
 case 0xC8:
@@ -1035,10 +1105,10 @@ case 0xC9:
 nn = sp[0] << 8 | sp[1];
 help0xC92 = memory[nn - 0xFFFF0000];
 help0xC9 = memory[(nn - 0xFFFF0000) + 1];
-printf("help0xC9: 0x%X\n", help0xC9);
-printf("help0xC92: 0x%X\n", help0xC92);
+//printf("help0xC9: 0x%X\n", help0xC9);
+//printf("help0xC92: 0x%X\n", help0xC92);
 pc = help0xC9 << 8 | help0xC92;
-printf("pc: 0x%X\n",pc);
+//printf("pc: 0x%X\n",pc);
 sp[1] += 0x02;
 if(sp[1] == 0x00 || sp[1] == 0x01)
 {
@@ -1205,6 +1275,20 @@ spbuffer = sp[0] << 8 | sp[1];
 memory[spbuffer] = de[1];
 pc++;
 cycles += 16;
+break;
+
+case 0xD6:
+af[0] = af[0] - memory[pc + 1];
+if(af[0] == 0x00)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x00)
+{
+af[1] = 0x00;
+}
+pc += 2;
+cycles += 8;
 break;
 
 case 0xD9:
@@ -1390,9 +1474,9 @@ break;
 
 case 0xFA:
 nn = memory[pc + 2] << 8 | memory[pc + 1];
-printf("nn:0x%X\n",nn);
+//printf("nn:0x%X\n",nn);
 af[0] = memory[nn - 0xFFFF0000];
-printf("a:0x%X\n",af[0]);
+//printf("a:0x%X\n",af[0]);
 pc += 3;
 cycles += 16;
 break;
@@ -1437,6 +1521,8 @@ printf("Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
 printf("Cycles: %i\n", cycles);
 printf("Please see errorlog.txt for more details.\n");
 printf("Please see memdump for a full Gameboy RAM Dump.\n");
+printf("Type anything and press enter to close.");
+std::cin>>dummychar;
 if(sdl_wanted == true)
 {
 SDL_DestroyWindow(AGBE_window);
