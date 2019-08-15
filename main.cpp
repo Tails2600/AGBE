@@ -159,19 +159,17 @@ int main(int argc, char** argv)
         }
         previous_opcode = opcode; // A variable to keep track of the previous opcode that was executed.
         next_opcode = memory[pc + 0x01];
+        lyhelp1 = cycles;
         doOpcode(); // Runs 1 Opcode
-        if (cycles % 344 == 0) //This setup is hacky and will be replaced in the distant future.
-        {
-        memory[0xFF44]++;
-        }
+        lyhelp2 = cycles;
 
-        if (cycles == 411512 && ime == true) //This setup is hacky and will be replaced in the distant future.
+        if (cycles == 411512 && ime == true) //This setup is hacky and will be replaced in the future.
         {
         VBlank_Interupt_Needs_Done = true;
         }
         if(sdl_wanted == true) // Handles Rendering
         {
-        if(cycles % 100000 == 0) // This is just set here for testing purposes.
+        if(cycles % 50000 == 0) // This is just set here so that things appear on the screen.
         {
         RenderFrame(); // Renders a frame;
             if (VRAMdebugwanted == true)
@@ -180,12 +178,17 @@ int main(int argc, char** argv)
             }
         }
         }
+        if(lyhelp1 <= 456 * lyhelp3 && lyhelp2 >= 456 * lyhelp3)
+        {
+        memory[0xFF44]++;
+        lyhelp3++;
+        if((memory[0xFF44] - 0xFFFFFF00) == 0x99)
+        {
+        memory[0xFF44] = 0x00;
+        }
+        }
+        MEMbitbuffer = memory[0xFFFF];
         handleInterupts();  // Handles Interupts
-        //FFFFbitbuffer = memory[0xFFFF];
-        //if(FFFFbitbuffer[0] == 1)
-        //{
-        //VBlank_Interupt_Needs_Done = true;
-        //}
         if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.
         {
         printf("\nOpcode: 0x%X", opcode); // Does what it says.

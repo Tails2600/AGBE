@@ -69,6 +69,31 @@ cycles += 8;
 pc += 2;
 break;
 
+case 0x07:
+Abitbuffer = af[0];
+Carry_Helper[0] = Abitbuffer[7];
+Abitbuffer = Abitbuffer << 1;
+af[0] = Abitbuffer.to_ulong();
+Fbitbuffer = af[1];
+if(af[0] == 0x00)
+{
+Fbitbuffer[7] = 1;
+Fbitbuffer[6] = 0;
+Fbitbuffer[5] = 0;
+Fbitbuffer[4] = Carry_Helper[0];
+}
+if(af[0] != 0x00)
+{
+Fbitbuffer[7] = 0;
+Fbitbuffer[6] = 0;
+Fbitbuffer[5] = 0;
+Fbitbuffer[4] = Carry_Helper[0];
+}
+af[1] = Fbitbuffer.to_ulong();
+pc++;
+cycles += 4;
+break;
+
 case 0x08:
 nnbuffer = memory[pc + 2] << 8 | memory[pc + 1];
 memory[(nnbuffer - 0xFFFF0000) + 1] = sp[0];
@@ -137,6 +162,31 @@ case 0x0E:
 bc[1] = memory[pc + 1];
 cycles += 8;
 pc += 2;
+break;
+
+case 0x0F:
+Abitbuffer = af[0];
+Carry_Helper[0] = Abitbuffer[0];
+Abitbuffer = Abitbuffer >> 1;
+af[0] = Abitbuffer.to_ulong();
+Fbitbuffer = af[1];
+if(af[0] == 0x00)
+{
+Fbitbuffer[7] = 1;
+Fbitbuffer[6] = 0;
+Fbitbuffer[5] = 0;
+Fbitbuffer[4] = Carry_Helper[0];
+}
+if(af[0] != 0x00)
+{
+Fbitbuffer[7] = 0;
+Fbitbuffer[6] = 0;
+Fbitbuffer[5] = 0;
+Fbitbuffer[4] = Carry_Helper[0];
+}
+af[1] = Fbitbuffer.to_ulong();
+pc++;
+cycles += 4;
 break;
 
 case 0x11:
@@ -980,6 +1030,20 @@ pc++;
 cycles += 4;
 break;
 
+case 0x80:
+af[0] = af[0] + bc[0];
+if(af[0] == 0x00)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x00)
+{
+af[1] = 0x00;
+}
+pc++;
+cycles += 4;
+break;
+
 case 0x81:
 af[0] = af[0] + bc[1];
 if(af[0] == 0x00)
@@ -1056,7 +1120,7 @@ pc++;
 cycles += 4;
 break;
 
-case 0xA1:
+case 0xA1: // Flags Need Fixed
 af[0] = bc[1] && af[0];
 if(af[0] == 0x00)
 {
@@ -1069,6 +1133,18 @@ pc++;
 cycles += 4;
 break;
 
+case 0xA0:
+af[0] = bc[0] && af[0];
+if(af[0] == 0x00)
+{
+af[1] = 0xA0;
+goto A0Done;
+}
+af[1] = 0x20;
+A0Done:
+pc++;
+cycles += 4;
+break;
 
 case 0xA7:
 af[0] = af[0] && af[0];
@@ -1149,7 +1225,7 @@ cycles += 4;
 pc++;
 break;
 
-case 0xB1:
+case 0xB1: // Flags need Reworked
 if(bc[1] > af[0])
 {
 af[0] = bc[1];
@@ -1160,6 +1236,29 @@ if(bc[1] < af[0])
 af[0] = af[0];
 }
 done0xB1:
+if(af[0] == 0x00)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x00)
+{
+af[1] = 0x00;
+}
+cycles += 4;
+pc++;
+break;
+
+case 0xB2: // Flags need reworked.
+if(de[0] > af[0])
+{
+af[0] = de[0];
+goto done0xB2;
+}
+if(de[0] < af[0])
+{
+af[0] = af[0];
+}
+done0xB2:
 if(af[0] == 0x00)
 {
 af[1] = 0x80;
@@ -1193,6 +1292,23 @@ af[1] = 0x00;
 }
 cycles += 4;
 pc++;
+break;
+
+case 0xB8: // Flags need fixed.
+tem = af[0] - bc[0];
+Fbitbuffer = af[1];
+if(tem == 0x00)
+{
+Fbitbuffer[7] = 1;
+Fbitbuffer[6] = 1;
+}
+if(tem != 0x00)
+{
+Fbitbuffer[7] = 0;
+Fbitbuffer[6] = 1;
+}
+pc++;
+cycles += 8;
 break;
 
 case 0xBE: // Flags need fixed.
@@ -1257,12 +1373,8 @@ pc = nn;
 cycles += 12;
 goto done0xC2;
 }
-if (Fbitbuffer[7] == 0)
-{
 pc += 3;
 cycles += 12;
-goto done0xC2;
-}
 done0xC2:
 break;
 
@@ -1545,6 +1657,26 @@ switch(next_opcode)
     cycles += 8;
     break;
 
+    case 0x47:
+    Abitbuffer = af[0];
+    Fbitbuffer = af[1];
+    if(Abitbuffer[0] == 0)
+    {
+    Fbitbuffer[7] = 1;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 1;
+    }
+    if(Abitbuffer[0] == 1)
+    {
+    Fbitbuffer[7] = 0;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 1;
+    }
+    af[1] = Fbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
     case 0x50:
     Bbitbuffer = bc[0];
     Fbitbuffer = af[1];
@@ -1555,6 +1687,26 @@ switch(next_opcode)
     Fbitbuffer[5] = 1;
     }
     if(Bbitbuffer[2] == 1)
+    {
+    Fbitbuffer[7] = 0;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 1;
+    }
+    af[1] = Fbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    case 0x57:
+    Abitbuffer = af[0];
+    Fbitbuffer = af[1];
+    if(Abitbuffer[2] == 0)
+    {
+    Fbitbuffer[7] = 1;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 1;
+    }
+    if(Abitbuffer[2] == 1)
     {
     Fbitbuffer[7] = 0;
     Fbitbuffer[6] = 0;
@@ -1866,6 +2018,26 @@ pc = 0x0008;
 cycles += 32;
 break;
 
+case 0xD0:
+Fbitbuffer = af[1];
+if(Fbitbuffer[4] == 0)
+{
+nn = sp[0] << 8 | sp[1];
+help0xC92 = memory[nn - 0xFFFF0000];
+help0xC9 = memory[(nn - 0xFFFF0000) + 1];
+pc = help0xC9 << 8 | help0xC92;
+sp[1] += 0x02;
+if(sp[1] == 0x00 || sp[1] == 0x01)
+{
+sp[0] += 0x01;
+}
+goto done0xD0;
+}
+pc++;
+done0xD0:
+cycles += 8;
+break;
+
 case 0xD1:
 help0xE1 = sp[0] << 8 | sp[1];
 de[0] = memory[help0xE1 + 1];
@@ -1928,6 +2100,22 @@ if (memory[0xFF0F] != 0x00)
 helpEI = 1;
 }
 cycles += 8;
+break;
+
+case 0xDA:
+Fbitbuffer = af[1];
+if (Fbitbuffer[4] == 1)
+{
+opnn[0] = memory[pc + 2];
+opnn[1] = memory[pc + 1];
+nn = opnn[0] << 8 | opnn[1];
+pc = nn;
+cycles += 12;
+goto done0xDA;
+}
+pc += 3;
+cycles += 12;
+done0xDA:
 break;
 
 case 0xE0:

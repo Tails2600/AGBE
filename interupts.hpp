@@ -1,6 +1,6 @@
 #include "timers.hpp"
 
-int handleInterupts() // Handles Interupts (Not Completely Finished)
+int handleInterupts() // Handles Interupts (Not Finished at all)
 {
 switch(previous_opcode)
 {
