@@ -70,8 +70,31 @@ current_tile_location == 0x9A34
 current_tile_location == current_tile_location + 12;
 }
 current_tile = memory[current_tile_location];
-current_tile_data_location = 0x8000 + ((current_tile - 0xFFFFFF00) * 0x10);
-if(current_tile_data_location > 0x9000)
+if(current_tile > 0xFF)
+{
+help0x9000Render = true;
+}
+if(mode0x8800 == false)
+{
+goto no0x8800;
+}
+if(mode0x8800 == true)
+{
+    if(current_tile > 0x7F)
+    {
+    current_tile_data_location = (0x8000 + ((current_tile - 0xFFFFFF00) * 0x10));
+    }
+    if(current_tile <= 0x7F)
+    {
+    current_tile_data_location = (0x9000 + ((current_tile - 0xFFFFFF00) * 0x10));
+    }
+goto donetest0x8800;
+}
+no0x8800:
+current_tile_data_location = (0x8000 + ((current_tile - 0xFFFFFF00) * 0x10));
+
+donetest0x8800:
+if(current_tile_data_location > 0x9000 && help0x9000Render == true)
 {
 current_tile_data_location -= 0x1000;
 }
@@ -171,9 +194,13 @@ current_x_pixel = 8 * xtile;
 bitset_id_counter = 7;
 current_y_pixel = 8 * ytile;
 
-current_tile = 0x00 + (xtile * 0x01) + (ytile * 0x10);
+current_tile = 0x0000 + (xtile * 0x01) + (ytile * 0x10);
+if(current_tile > 0xFF)
+{
+help0x9000Render = true;
+}
 current_tile_data_location = 0x8000 + ((current_tile - 0xFFFFFF00) * 0x10);
-if(current_tile_data_location > 0x9000)
+if (current_tile_data_location > 0x9000 && help0x9000Render == true)
 {
 current_tile_data_location -= 0x1000;
 }
@@ -209,7 +236,7 @@ if (current_x_tile < 17)
 {
 RenderVRAMTile(current_x_tile,current_y_tile);
 current_x_tile++;
-    if (current_y_tile == 17)
+    if (current_y_tile == 25)
     {
     goto doneRenderingVRAMFrame;
     }
@@ -222,5 +249,6 @@ current_x_tile = 0;
 goto renderNextVRAMTile;
 }
 doneRenderingVRAMFrame:
+VRAMRenderhelp = false;
 SDL_RenderPresent(VRAM_renderer);
 }

@@ -36,6 +36,14 @@ case SDLK_x:
 memory[0xFF98] = memory[0xFF98] + 0x01;
 break;
 
+case SDLK_o:
+mode0x8800 = false;
+break;
+
+case SDLK_p:
+mode0x8800 = true;
+break;
+
 case SDLK_RETURN:
 // Handle Start
 memory[0xFF98] = memory[0xFF98] + 0x08;

@@ -1,5 +1,24 @@
 #include "timers.hpp"
 
+int checkInterrupts()
+{
+if(Interrupts_Enabled == true)
+{
+    if(cycles % 70000 == 0x00)
+    {
+    Interupt_thing = true;
+    }
+}
+if(Interrupts_Enabled == false)
+{
+Interupt_thing = false;
+}
+if(Interupt_thing == true)
+{
+VBlank_Interupt_Needs_Done = true;
+}
+}
+
 int handleInterupts() // Handles Interupts (Not Finished at all)
 {
 switch(previous_opcode)
@@ -39,6 +58,7 @@ if(VBlank_Interupt_Needs_Done == true) // If the VBLank interupt Needs done, exe
 {
 // Do VBlank Interupt
 ime = false;
+Interupt_thing = false;
 help0xCD3 = sp[0];
 nn = help0xCD3 << 8 | sp[1];
 help0xCD = (pc) >> 8;

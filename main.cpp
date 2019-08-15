@@ -16,7 +16,7 @@ int main(int argc, char** argv)
     AGBE_version[9] = '1';
     AGBE_version[10] = '.';
     AGBE_version[11] = '1';
-
+    mode0x8800 = false;
     printf("Before we begin, do you want to enable SDL2? (y = yes, n = no)\nSDL2 is for Graphics and Input.\nOption: ");
     cin>>choice;
     if (choice == 'y')
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
         SDL_RenderPresent(renderer);
         if (VRAMdebugwanted == true)
         {
-        AGBE_VRAM_DEBUG = SDL_CreateWindow("VRAM", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 128, 128, SDL_WINDOW_SHOWN);
+        AGBE_VRAM_DEBUG = SDL_CreateWindow("VRAM", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 128, 192, SDL_WINDOW_SHOWN);
         VRAM_renderer = SDL_CreateRenderer(AGBE_VRAM_DEBUG, -1, SDL_RENDERER_ACCELERATED);
         SDL_SetRenderDrawColor(VRAM_renderer,0,255,0,255);
         SDL_RenderClear(VRAM_renderer);
@@ -163,13 +163,13 @@ int main(int argc, char** argv)
         doOpcode(); // Runs 1 Opcode
         lyhelp2 = cycles;
 
-        if (cycles == 411512 && ime == true) //This setup is hacky and will be replaced in the future.
-        {
-        VBlank_Interupt_Needs_Done = true;
-        }
+        //if (cycles == 411512 && ime == true) //This setup is hacky and will be replaced in the future.
+        //{
+        //VBlank_Interupt_Needs_Done = true;
+        //}
         if(sdl_wanted == true) // Handles Rendering
         {
-        if(cycles % 50000 == 0) // This is just set here so that things appear on the screen.
+        if(cycles % 5000 == 0) // This is just set here so that things appear on the screen.
         {
         RenderFrame(); // Renders a frame;
             if (VRAMdebugwanted == true)
@@ -188,6 +188,7 @@ int main(int argc, char** argv)
         }
         }
         MEMbitbuffer = memory[0xFFFF];
+        checkInterrupts();
         handleInterupts();  // Handles Interupts
         if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.
         {

@@ -973,6 +973,12 @@ pc++;
 cycles += 8;
 break;
 
+case 0x76: // Probably Broken
+pc++;
+VBlank_Interupt_Needs_Done = true;
+cycles += 4;
+break;
+
 case 0x77:
 hlbuffer = hl[0] << 8 | hl[1];
 memory[hlbuffer] = af[0];
@@ -1060,6 +1066,20 @@ break;
 
 case 0x83: // Flags need fixed
 af[0] = af[0] + de[1];
+if(af[0] == 0x00)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x00)
+{
+af[1] = 0x00;
+}
+pc++;
+cycles += 4;
+break;
+
+case 0x85: // Flags need fixed
+af[0] = af[0] + hl[1];
 if(af[0] == 0x00)
 {
 af[1] = 0x80;
@@ -1268,6 +1288,30 @@ if(af[0] != 0x00)
 af[1] = 0x00;
 }
 cycles += 4;
+pc++;
+break;
+
+case 0xB6: // Flags need reworked.
+hlbuffer = hl[0] << 8 | hl[1];
+if(memory[hlbuffer] > af[0])
+{
+af[0] = memory[hlbuffer];
+goto done0xB6;
+}
+if(memory[hlbuffer] < af[0])
+{
+af[0] = af[0];
+}
+done0xB6:
+if(af[0] == 0x00)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x00)
+{
+af[1] = 0x00;
+}
+cycles += 8;
 pc++;
 break;
 
@@ -1860,6 +1904,15 @@ switch(next_opcode)
     cycles += 8;
     break;
 
+    case 0xC6:
+    hlbuffer = hl[0] << 8 | hl[1];
+    MEMbitbuffer = memory[hlbuffer];
+    MEMbitbuffer[0] = 1;
+    memory[hlbuffer] = MEMbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 16;
+    break;
+
     case 0xC7:
     Abitbuffer = af[0];
     Abitbuffer[0] = 1;
@@ -2264,7 +2317,7 @@ pc++;
 break;
 
 case 0xF3: // DI (Disables Interupts)
-ime = false;
+Interrupts_Enabled = false;
 cycles += 4;
 pc++;
 break;
@@ -2305,7 +2358,7 @@ cycles += 16;
 break;
 
 case 0xFB: // EI (Enables Interupts)
-ime = true;
+Interrupts_Enabled = true;
 if (memory[0xFF0F] != 0x00)
 {
 helpEI = 1;
@@ -2371,7 +2424,7 @@ printf("Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
 printf("Cycles: %i\n", cycles);
 printf("Please see errorlog.txt for more details.\n");
 printf("Please see memdump for a full Gameboy RAM Dump.\n");
-printf("Type anything and press enter to close.");
+printf("Type something and press enter to close.\n");
 std::cin>>dummychar;
 if(sdl_wanted == true)
 {

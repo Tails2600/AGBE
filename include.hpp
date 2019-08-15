@@ -72,6 +72,8 @@ std::bitset<1> MSB_Helper;
 std::bitset<1> Carry_Helper;
 std::bitset<1> Carry_Helper2;
 bool doBios;
+bool VRAMRenderhelp;
+bool cpuHALT;
 // Variables that Store things like the Current Opcode being Executed
 unsigned char opcode;
 unsigned char previous_opcode;
@@ -99,6 +101,8 @@ std::bitset<1> bin_value_1 = 1;
 std::bitset<1> bin_value_0 = 0;
 bool VBlank_Interupt_Needs_Done;
 std::bitset<8> FF0F_Interupt_Value2;
+bool Interrupts_Enabled;
+bool Interupt_thing;
 // Variables used for Testing
 int testingn;
 uint32_t pixeltestcounter;
@@ -117,7 +121,7 @@ int current_x_pixel;
 int current_y_pixel;
 std::bitset<8> MEMVRAMbitbuffer;
 std::bitset<8> MEMVRAMbitbuffer2; // This should always hold the value after MEMVRAMbitbuffer.
-unsigned char current_tile;
+short current_tile;
 int current_x_tile;
 int current_y_tile;
 int current_tile_location;
@@ -135,6 +139,8 @@ int tile_x_counter_for_pixelx_plus1;
 int tile_y_counter_for_pixely_plus1;
 bool thingforSDL2render;
 bool VRAMdebugwanted;
+bool help0x9000Render;
+bool mode0x8800;
 // SDL2 Color Palletes
 SDL_Color color_black = {0,0,0,0}; // Black (3)
 SDL_Color color_darkgrey = {0x76, 0x76, 0x76, 0}; // Dark Gray (2)
