@@ -41,9 +41,10 @@ case SDLK_RETURN:
 memory[0xFF80] = memory[0xFF80] + 0x08;
 break;
 
-case SDLK_SPACE:
+case SDLK_SPACE: // This is currently being used as a way to exit the program.
 // Handle Select
-memory[0xFF80] = memory[0xFF80] + 0x04;
+//memory[0xFF80] = memory[0xFF80] + 0x04;
+close_program = true;
 break;
 
 }

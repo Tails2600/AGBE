@@ -122,3 +122,105 @@ goto renderNextTile;
 doneRenderingFrame:
 SDL_RenderPresent(renderer);
 }
+
+void setdrawcolor_VRAMwhite()
+{
+SDL_SetRenderDrawColor(VRAM_renderer,color_white.r,color_white.g,color_white.b,color_white.a);
+}
+void setdrawcolor_VRAMlightgrey()
+{
+SDL_SetRenderDrawColor(VRAM_renderer,color_lightgrey.r,color_lightgrey.g,color_lightgrey.b,color_lightgrey.a);
+}
+void setdrawcolor_VRAMdarkgrey()
+{
+SDL_SetRenderDrawColor(VRAM_renderer,color_darkgrey.r,color_darkgrey.g,color_darkgrey.b,color_darkgrey.a);
+}
+void setdrawcolor_VRAMblack()
+{
+SDL_SetRenderDrawColor(VRAM_renderer,color_black.r,color_black.g,color_black.b,color_black.a);
+}
+
+int compare_VRAMpixels() // MAKE SURE BITSET_ID_COUNTER IS SET CORRECTLY BEFORE USING THIS.
+{
+if (MEMVRAMbitbuffer[bitset_id_counter] == 0 && MEMVRAMbitbuffer2[bitset_id_counter] == 0)
+{
+setdrawcolor_VRAMwhite();
+compare_pixels_result = 0;
+}
+if (MEMVRAMbitbuffer[bitset_id_counter] == 0 && MEMVRAMbitbuffer2[bitset_id_counter == 1])
+{
+setdrawcolor_VRAMlightgrey();
+compare_pixels_result = 1;
+}
+if (MEMVRAMbitbuffer[bitset_id_counter] == 1 && MEMVRAMbitbuffer2[bitset_id_counter] == 0)
+{
+setdrawcolor_VRAMdarkgrey();
+compare_pixels_result = 2;
+}
+if (MEMVRAMbitbuffer[bitset_id_counter] == 1 && MEMVRAMbitbuffer2[bitset_id_counter] == 1)
+{
+setdrawcolor_VRAMblack();
+compare_pixels_result = 3;
+}
+
+}
+
+void RenderVRAMTile(int xtile, int ytile)
+{
+current_x_pixel = 8 * xtile;
+bitset_id_counter = 7;
+current_y_pixel = 8 * ytile;
+
+current_tile = 0x00 + (xtile * 0x01) + (ytile * 0x10);
+current_tile_data_location = 0x8000 + ((current_tile - 0xFFFFFF00) * 0x10);
+if(current_tile_data_location > 0x9000)
+{
+current_tile_data_location -= 0x1000;
+}
+rendernewVRAMpixel:
+MEMVRAMbitbuffer = memory[current_tile_data_location];
+MEMVRAMbitbuffer2 = memory[current_tile_data_location + 1];
+compare_VRAMpixels();
+SDL_RenderDrawPoint(VRAM_renderer,current_x_pixel,current_y_pixel);
+current_x_pixel++;
+bitset_id_counter--;
+if (current_x_pixel % 8 == 0) // Done Drawing Line
+{
+current_x_pixel -= 8;
+bitset_id_counter = 7;
+current_y_pixel++;
+current_tile_data_location += 0x02;
+    if (current_y_pixel % 8 == 0) // Done Drawing Tile
+    {
+    goto donerenderingVRAMtile;
+    }
+}
+goto rendernewVRAMpixel;
+donerenderingVRAMtile:
+dummyvalue++; // This is just here so the compiler doesn't complain about the last function being a goto related thing.
+}
+
+void RenderVRAMFrame()
+{
+current_x_tile = 0;
+current_y_tile = 0;
+renderNextVRAMTile:
+if (current_x_tile < 17)
+{
+RenderVRAMTile(current_x_tile,current_y_tile);
+current_x_tile++;
+    if (current_y_tile == 17)
+    {
+    goto doneRenderingVRAMFrame;
+    }
+goto renderNextVRAMTile;
+}
+if (current_x_tile == 17)
+{
+current_y_tile++;
+current_x_tile = 0;
+goto renderNextVRAMTile;
+}
+doneRenderingVRAMFrame:
+SDL_RenderPresent(VRAM_renderer);
+}

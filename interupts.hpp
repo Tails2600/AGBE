@@ -52,6 +52,7 @@ if(sp[1] == 0xFF || sp[1] == 0xFE)
 sp[0] -= 0x01;
 }
 memory[0xFF0F] = 0x00; // Note: if there is a bug where interupts are skipped, this is probably the line of code that would cause it.
+memory[0xFFFF] = 0x00;
 VBlank_Interupt_Needs_Done = false;
 }
 

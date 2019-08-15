@@ -14,17 +14,31 @@ int main(int argc, char** argv)
     AGBE_version[7] = '0';
     AGBE_version[8] = '.';
     AGBE_version[9] = '1';
+    AGBE_version[10] = '.';
+    AGBE_version[11] = '1';
 
     printf("Before we begin, do you want to enable SDL2? (y = yes, n = no)\nSDL2 is for Graphics and Input.\nOption: ");
     cin>>choice;
     if (choice == 'y')
     {
     sdl_wanted = true;
-    goto beginbeforeinitmemory;
+    goto VRAMquestion;
     }
     if (choice == 'n')
     {
     sdl_wanted = false;
+    goto beginbeforeinitmemory;
+    }
+    VRAMquestion:
+    printf("Would you like a seperate VRAM Debugger Window?\nOption: ");
+    cin>>choice;
+    if (choice == 'y')
+    {
+    VRAMdebugwanted = true;
+    }
+    if (choice == 'n')
+    {
+    VRAMdebugwanted = false;
     }
     beginbeforeinitmemory:
     init_memory();
@@ -42,7 +56,14 @@ int main(int argc, char** argv)
         SDL_SetRenderDrawColor(renderer,0,0,255,255);
         SDL_RenderClear(renderer);
         SDL_RenderPresent(renderer);
-
+        if (VRAMdebugwanted == true)
+        {
+        AGBE_VRAM_DEBUG = SDL_CreateWindow("VRAM", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 128, 128, SDL_WINDOW_SHOWN);
+        VRAM_renderer = SDL_CreateRenderer(AGBE_VRAM_DEBUG, -1, SDL_RENDERER_ACCELERATED);
+        SDL_SetRenderDrawColor(VRAM_renderer,0,255,0,255);
+        SDL_RenderClear(VRAM_renderer);
+        SDL_RenderPresent(VRAM_renderer);
+        }
     }
     char *filename;
     printf("Welcome to AGBE %s!\n",AGBE_version);
@@ -115,6 +136,16 @@ int main(int argc, char** argv)
     {
     log_file_made = false; // Log file is NOT made.
     }
+    printf("Do you want to use the the BIOS? (BIOS should be located at BIOS/GB.BIOS)\nOption: ");
+    cin>>choice;
+    if (choice == 'y')
+    {
+    doBios = true;
+    }
+    if (choice == 'n')
+    {
+    doBios = false;
+    }
     printf("Emulation Started.\n");
     gbPowerOn(); // Powers on the Gameboy/runs Boot Sequence (Unfinished)
         test_for_sdl2: // A goto statement for a SDL2 Loop (is not disabled by sdl_wanted = false.)
@@ -133,7 +164,8 @@ int main(int argc, char** argv)
         {
         memory[0xFF44]++;
         }
-        if (cycles == 411512) //This setup is hacky and will be replaced in the distant future.
+
+        if (cycles == 411512 && ime == true) //This setup is hacky and will be replaced in the distant future.
         {
         VBlank_Interupt_Needs_Done = true;
         }
@@ -141,10 +173,19 @@ int main(int argc, char** argv)
         {
         if(cycles % 100000 == 0) // This is just set here for testing purposes.
         {
-        RenderFrame(); // Renders a framee;
+        RenderFrame(); // Renders a frame;
+            if (VRAMdebugwanted == true)
+            {
+            RenderVRAMFrame(); // Renders a frame in the VRAM Debugger
+            }
         }
         }
         handleInterupts();  // Handles Interupts
+        //FFFFbitbuffer = memory[0xFFFF];
+        //if(FFFFbitbuffer[0] == 1)
+        //{
+        //VBlank_Interupt_Needs_Done = true;
+        //}
         if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.
         {
         printf("\nOpcode: 0x%X", opcode); // Does what it says.
@@ -172,13 +213,20 @@ int main(int argc, char** argv)
         if(sdl_wanted == true)
         {
         SDL_DestroyWindow(AGBE_window);
+        SDL_DestroyWindow(AGBE_VRAM_DEBUG);
         SDL_Quit();
         }
         close_program = true;
-        FILE * mem_dump;
-        mem_dump = fopen ("log/memdump", "w+");
-        fwrite (memory , sizeof(char), sizeof(memory), mem_dump);
-        fclose (mem_dump);
+
+        //FILE * mem_dump;
+        //mem_dump = fopen ("log/memdump", "w+");
+        //fwrite (memory , sizeof(char), sizeof(memory), mem_dump);
+        //fclose (mem_dump);
+        ofstream myfile("log/memdump");
+        myfile.write((char *)memory,sizeof(memory));
+        myfile.close();
+
+
         }
         }
         if (log_file_made == true)  // If User wants a log file, then this will write stuff to it.

@@ -18,6 +18,10 @@ unsigned int hlbuffer;
 unsigned int nnbuffer;
 unsigned int nbuffer;
 unsigned int spbuffer;
+int8_t tem;
+short hlbuffer2;
+short hlbuffer3;
+int16_t spbuffer2;
 int8_t pcbuffer1;
 int8_t pcbuffer2;
 std::bitset<8> Abitbuffer;
@@ -29,6 +33,7 @@ std::bitset<8> Fbitbuffer;
 std::bitset<8> Hbitbuffer;
 std::bitset<8> Lbitbuffer;
 std::bitset<8> MEMbitbuffer;
+std::bitset<8> FFFFbitbuffer;
 bool close_program;
 char a;
 char b;
@@ -59,6 +64,11 @@ char help0xD9[0x2];
 char help0xEF;
 char help0xEF2;
 unsigned short backupPC0xEF;
+std::bitset<1> help0x1F;
+std::bitset<1> MSB_Helper;
+std::bitset<1> Carry_Helper;
+std::bitset<1> Carry_Helper2;
+bool doBios;
 // Variables that Store things like the Current Opcode being Executed
 unsigned char opcode;
 unsigned char previous_opcode;
@@ -68,6 +78,7 @@ unsigned char opnn[2]; // JP
 int16_t nn = 0x00000000;
 // Variables that have Nothing to do with the Emulation of the Gameboy
 int rom_size;
+int bios_size;
 bool sdl_wanted;
 char choice;
 bool debugging_enabled;
@@ -96,6 +107,8 @@ SDL_Event SDL_EVENT_HANDLING;
 SDL_Window* AGBE_window = NULL;
 SDL_Surface* screenSurface = NULL;
 SDL_Renderer* renderer;
+SDL_Window* AGBE_VRAM_DEBUG = NULL;
+SDL_Renderer* VRAM_renderer;
 SDL_Texture *texture;
 int current_x_pixel;
 int current_y_pixel;
@@ -118,6 +131,7 @@ int tile_y_counter_for_pixely;
 int tile_x_counter_for_pixelx_plus1;
 int tile_y_counter_for_pixely_plus1;
 bool thingforSDL2render;
+bool VRAMdebugwanted;
 // SDL2 Color Palletes
 SDL_Color color_black = {0,0,0,0}; // Black (3)
 SDL_Color color_darkgrey = {0x76, 0x76, 0x76, 0}; // Dark Gray (2)

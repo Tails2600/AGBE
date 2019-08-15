@@ -71,10 +71,20 @@ break;
 
 case 0x08:
 nnbuffer = memory[pc + 2] << 8 | memory[pc + 1];
-memory[nnbuffer + 1] = sp[0];
-memory[nnbuffer] = sp[1];
+memory[(nnbuffer - 0xFFFF0000) + 1] = sp[0];
+memory[(nnbuffer - 0xFFFF0000)] = sp[1];
 pc += 3;
 cycles += 20;
+break;
+
+case 0x09: // Flags need fixed on this opcode
+hlbuffer2 = hl[0] << 8 | hl[1];
+hlbuffer3 = bc[0] << 8 | bc[1];
+hlbuffer2 = hlbuffer2 + hlbuffer3;
+hl[0] = hlbuffer2 >> 8;
+hl[1] = hlbuffer2;
+pc++;
+cycles += 8;
 break;
 
 case 0x0A:
@@ -227,6 +237,34 @@ cycles += 8;
 pc += 2;
 break;
 
+case 0x1F:
+Abitbuffer = af[0];
+help0x1F[0] = Abitbuffer[0];
+Abitbuffer = Abitbuffer >> 1;
+af[0] = Abitbuffer.to_ulong();
+if(af[0] == 0x00)
+{
+Fbitbuffer = af[1];
+Fbitbuffer[7] = 1;
+Fbitbuffer[6] = 0;
+Fbitbuffer[5] = 0;
+Fbitbuffer[4] = help0x1F[0];
+af[1] = Fbitbuffer.to_ulong();
+}
+if(af[0] != 0x00)
+{
+Fbitbuffer = af[1];
+Fbitbuffer[7] = 0;
+Fbitbuffer[6] = 0;
+Fbitbuffer[5] = 0;
+Fbitbuffer[4] = help0x1F[0];
+af[1] = Fbitbuffer.to_ulong();
+pc++;
+cycles += 4;
+}
+
+break;
+
 case 0x20:
 pc +=2;
 if(af[1] != 0x80 && af[1] != 0xC0 && af[1] != 0xA0 && af[1] != 0x90 && af[1] != 0xE0 && af[1] != 0xB0 && af[1] != 0xD0 && af[1] != 0xF0)
@@ -282,6 +320,21 @@ cycles += 4;
 pc++;
 break;
 
+case 0x25:
+hl[0]--;
+
+if(hl[0] == 0x00)
+{
+af[1] = 0xC0;
+}
+if(hl[0] != 0x00)
+{
+af[1] = 0x40;
+}
+pc++;
+cycles += 4;
+break;
+
 case 0x26:
 hl[0] = memory[pc + 1];
 cycles += 8;
@@ -295,6 +348,16 @@ if(help0x28 == bin_value_1)
 pc = pc + memory[pc + 0x01];
 }
 pc += 2;
+cycles += 8;
+break;
+
+case 0x29: // Flags need fixed on this opcode
+hlbuffer2 = hl[0] << 8 | hl[1];
+hlbuffer3 = hl[0] << 8 | hl[1];
+hlbuffer2 = hlbuffer2 + hlbuffer3;
+hl[0] = hlbuffer2 >> 8;
+hl[1] = hlbuffer2;
+pc++;
 cycles += 8;
 break;
 
@@ -332,6 +395,22 @@ cycles += 4;
 pc++;
 break;
 
+case 0x2D:
+hl[1]--;
+
+if(hl[1] == 0x00)
+{
+af[1] = 0xC0;
+}
+if(hl[1] != 0x00)
+{
+af[1] = 0x40;
+}
+
+pc++;
+cycles += 4;
+break;
+
 case 0x2E:
 hl[1] = memory[pc + 1];
 cycles += 8;
@@ -343,6 +422,16 @@ af[0] = ~af[0];
 af[1] = 0x60;
 cycles += 4;
 pc++;
+break;
+
+case 0x30:
+Fbitbuffer = af[1];
+if(Fbitbuffer[4] == 0)
+{
+pc = pc + memory[pc + 0x01];
+}
+pc += 2;
+cycles += 8;
 break;
 
 case 0x31:
@@ -413,6 +502,35 @@ case 0x36:
 memory[hlbuffer] = memory[pc + 1];
 cycles += 12;
 pc += 2;
+break;
+
+case 0x37:
+Fbitbuffer = af[1];
+Fbitbuffer[6] = 0;
+Fbitbuffer[5] = 0;
+Fbitbuffer[4] = 1;
+pc++;
+cycles += 4;
+break;
+
+case 0x38:
+Fbitbuffer = af[1];
+if(Fbitbuffer[4] == 1)
+{
+pc = pc + memory[pc + 0x01];
+}
+pc += 2;
+cycles += 8;
+break;
+
+case 0x39:
+hlbuffer2 = hl[0] << 8 | hl[1];
+spbuffer2 = sp[0] << 8 | sp[1];
+hlbuffer2 = hlbuffer2 + spbuffer2;
+hl[0] = hlbuffer2 >> 8;
+hl[1] = hlbuffer2;
+pc++;
+cycles += 8;
 break;
 
 case 0x3A:
@@ -862,6 +980,34 @@ pc++;
 cycles += 4;
 break;
 
+case 0x81:
+af[0] = af[0] + bc[1];
+if(af[0] == 0x00)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x00)
+{
+af[1] = 0x00;
+}
+pc++;
+cycles += 4;
+break;
+
+case 0x83: // Flags need fixed
+af[0] = af[0] + de[1];
+if(af[0] == 0x00)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x00)
+{
+af[1] = 0x00;
+}
+pc++;
+cycles += 4;
+break;
+
 case 0x87:
 af[0] = af[0] + af[0];
 if(af[0] == 0x00)
@@ -871,6 +1017,40 @@ af[1] = 0x80;
 if(af[0] != 0x00)
 {
 af[1] = 0x00;
+}
+pc++;
+cycles += 4;
+break;
+
+case 0x91: // Flag Handling Needs Fixing.
+af[0] = af[0] - bc[1];
+Fbitbuffer = af[1];
+if(af[0] == 0x00)
+{
+Fbitbuffer[7] = 1;
+Fbitbuffer[6] = 1;
+}
+if(af[0] != 0x00)
+{
+Fbitbuffer[7] = 0;
+Fbitbuffer[6] = 1;
+}
+pc++;
+cycles += 4;
+break;
+
+case 0x95: // Flag Handling Needs Fixing.
+af[0] = af[0] - hl[1];
+Fbitbuffer = af[1];
+if(af[0] == 0x00)
+{
+Fbitbuffer[7] = 1;
+Fbitbuffer[6] = 1;
+}
+if(af[0] != 0x00)
+{
+Fbitbuffer[7] = 0;
+Fbitbuffer[6] = 1;
 }
 pc++;
 cycles += 4;
@@ -931,27 +1111,19 @@ pc++;
 cycles += 4;
 break;
 
-case 0xB1:
-if(bc[1] > af[0])
-{
-af[0] = bc[1];
-goto done0xB1;
-}
-if(bc[1] < af[0])
-{
-af[0] = af[0];
-}
-done0xB1:
-if(af[0] == 0x00)
+case 0xAE:
+hlbuffer = hl[0] << 8 | hl[1];
+af[0] = memory[hlbuffer] ^ af[0];
+if(af[0] == 0x0)
 {
 af[1] = 0x80;
 }
-if(af[0] != 0x00)
+if(af[0] != 0x0)
 {
 af[1] = 0x00;
 }
-cycles += 4;
 pc++;
+cycles += 4;
 break;
 
 case 0xB0:
@@ -975,6 +1147,70 @@ af[1] = 0x00;
 }
 cycles += 4;
 pc++;
+break;
+
+case 0xB1:
+if(bc[1] > af[0])
+{
+af[0] = bc[1];
+goto done0xB1;
+}
+if(bc[1] < af[0])
+{
+af[0] = af[0];
+}
+done0xB1:
+if(af[0] == 0x00)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x00)
+{
+af[1] = 0x00;
+}
+cycles += 4;
+pc++;
+break;
+
+case 0xB7:
+if(af[0] > af[0])
+{
+af[0] = af[0];
+goto done0xB7;
+}
+if(af[0] < af[0])
+{
+af[0] = af[0];
+}
+done0xB7:
+if(af[0] == 0x00)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x00)
+{
+af[1] = 0x00;
+}
+cycles += 4;
+pc++;
+break;
+
+case 0xBE: // Flags need fixed.
+hlbuffer = hl[0] << 8 | hl[1];
+tem = af[0] - memory[hlbuffer];
+Fbitbuffer = af[1];
+if(tem == 0x00)
+{
+Fbitbuffer[7] = 1;
+Fbitbuffer[6] = 1;
+}
+if(tem != 0x00)
+{
+Fbitbuffer[7] = 0;
+Fbitbuffer[6] = 1;
+}
+pc++;
+cycles += 8;
 break;
 
 case 0xC0:
@@ -1008,6 +1244,26 @@ sp[0]++;
 }
 cycles += 12;
 pc++;
+break;
+
+case 0xC2:
+Fbitbuffer = af[1];
+if (Fbitbuffer[7] == 0)
+{
+opnn[0] = memory[pc + 2];
+opnn[1] = memory[pc + 1];
+nn = opnn[0] << 8 | opnn[1];
+pc = nn;
+cycles += 12;
+goto done0xC2;
+}
+if (Fbitbuffer[7] == 0)
+{
+pc += 3;
+cycles += 12;
+goto done0xC2;
+}
+done0xC2:
 break;
 
 case 0xC3:
@@ -1081,6 +1337,32 @@ pc += 2;
 cycles += 8;
 break;
 
+case 0xC7:
+// Note: 0xEF2 has the First bit, while 0xEF has the second.
+pc++;
+backupPC0xEF = pc;
+help0xEF = pc; // to copy the first 8 bits.
+pc = pc>>8; //push the other 8 bits to the right
+help0xEF2 = pc;
+pc = backupPC0xEF;
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = (help0xEF2 - 0xFFFFFF00);
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = (help0xEF - 0xFFFFFF00); // End of copying current PC to mem at SP
+pc = 0x0000;
+cycles += 32;
+break;
+
 case 0xC8:
 help0xC0 = af[1]>>7;
 if(help0xC0 == bin_value_1)
@@ -1140,6 +1422,88 @@ break;
 case 0xCB:
 switch(next_opcode)
 {
+
+    case 0x19:
+    Cbitbuffer = bc[1];
+    Fbitbuffer = af[1];
+    Carry_Helper[0] = Cbitbuffer[0];
+    Carry_Helper2[0] = Fbitbuffer[4];
+    Cbitbuffer = Cbitbuffer >> 1;
+    Cbitbuffer[7] = Carry_Helper2[0];
+    bc[1] = Cbitbuffer.to_ulong();
+    if(bc[1] == 0x00)
+    {
+    Fbitbuffer[7] = 1;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 0;
+    Fbitbuffer[4] = Carry_Helper[0];
+    }
+    if(bc[1] != 0x00)
+    {
+    Fbitbuffer[7] = 1;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 0;
+    Fbitbuffer[4] = Carry_Helper[0];
+    }
+    af[1] = Fbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    case 0x1A:
+    Dbitbuffer = de[0];
+    Fbitbuffer = af[1];
+    Carry_Helper[0] = Dbitbuffer[0];
+    Carry_Helper2[0] = Fbitbuffer[4];
+    Dbitbuffer = Dbitbuffer >> 1;
+    Dbitbuffer[7] = Carry_Helper2[0];
+    de[0] = Dbitbuffer.to_ulong();
+    if(de[0] == 0x00)
+    {
+    Fbitbuffer[7] = 1;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 0;
+    Fbitbuffer[4] = Carry_Helper[0];
+    }
+    if(de[0] != 0x00)
+    {
+    Fbitbuffer[7] = 1;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 0;
+    Fbitbuffer[4] = Carry_Helper[0];
+    }
+    af[1] = Fbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    case 0x28:
+    Bbitbuffer = bc[0];
+    Fbitbuffer = af[1];
+    MSB_Helper[0] = Bbitbuffer[7];
+    Carry_Helper[0] = Bbitbuffer[0];
+    Bbitbuffer = Bbitbuffer >> 1;
+    Bbitbuffer[7] = MSB_Helper[0];
+    bc[0] = Bbitbuffer.to_ulong();
+    if(bc[0] == 0x00)
+    {
+    Fbitbuffer[7] = 1;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 0;
+    Fbitbuffer[4] = Carry_Helper[0];
+    }
+    if(bc[0] != 0x00)
+    {
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 0;
+    Fbitbuffer[4] = Carry_Helper[0];
+    }
+    af[1] = Fbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+
     case 0x37:
     af[0] = ( (af[0] & 0x0F) << 4 | (af[0] & 0xF0) >> 4 );
     if (af[0] == 0x00)
@@ -1153,6 +1517,114 @@ switch(next_opcode)
     cycles += 8;
     pc += 2;
     break; // Ends 0xCB37 Case
+
+    case 0x38:
+    Bbitbuffer = bc[0];
+    Fbitbuffer = af[1];
+    MSB_Helper[0] = Bbitbuffer[7];
+    Carry_Helper[0] = Bbitbuffer[0];
+    Bbitbuffer = Bbitbuffer >> 1;
+    MSB_Helper[0] = 0;
+    Bbitbuffer[7] = MSB_Helper[0];
+    bc[0] = Bbitbuffer.to_ulong();
+    if(bc[0] == 0x00)
+    {
+    Fbitbuffer[7] = 1;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 0;
+    Fbitbuffer[4] = Carry_Helper[0];
+    }
+    if(bc[0] != 0x00)
+    {
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 0;
+    Fbitbuffer[4] = Carry_Helper[0];
+    }
+    af[1] = Fbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    case 0x50:
+    Bbitbuffer = bc[0];
+    Fbitbuffer = af[1];
+    if(Bbitbuffer[2] == 0)
+    {
+    Fbitbuffer[7] = 1;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 1;
+    }
+    if(Bbitbuffer[2] == 1)
+    {
+    Fbitbuffer[7] = 0;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 1;
+    }
+    af[1] = Fbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    case 0x7C:
+    Hbitbuffer = hl[0];
+    Fbitbuffer = af[1];
+    if(Hbitbuffer[7] == 0)
+    {
+    Fbitbuffer[7] = 1;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 1;
+    }
+    if(Hbitbuffer[7] == 1)
+    {
+    Fbitbuffer[7] = 0;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 1;
+    }
+    af[1] = Fbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    case 0x7E:
+    hlbuffer = hl[0] << 8 | hl[1];
+    MEMbitbuffer = memory[hlbuffer];
+    Fbitbuffer = af[1];
+    if (MEMbitbuffer[7] == 0)
+    {
+    Fbitbuffer[7] = 1;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 1;
+    af[1] = Fbitbuffer.to_ulong();
+    }
+    if (MEMbitbuffer[7] == 1)
+    {
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 1;
+    af[1] = Fbitbuffer.to_ulong();
+    }
+    pc += 2;
+    cycles += 16;
+    break;
+
+    case 0x7F: // Flags need fixing?
+    Abitbuffer = af[0];
+    Fbitbuffer = af[1];
+    if(Abitbuffer[7] == 0)
+    {
+    Fbitbuffer[7] = 1;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 1;
+    }
+    if(Abitbuffer[7] == 1)
+    {
+    Fbitbuffer[7] = 0;
+    Fbitbuffer[6] = 0;
+    Fbitbuffer[5] = 1;
+    }
+    af[1] = Fbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
 
     case 0x80:
     Bbitbuffer = bc[0];
@@ -1208,7 +1680,7 @@ switch(next_opcode)
     MEMbitbuffer.reset(0);
     memory[hlbuffer] = MEMbitbuffer.to_ulong();
     pc += 2;
-    cycles += 8;
+    cycles += 16;
     break;
 
     case 0x87:
@@ -1219,11 +1691,110 @@ switch(next_opcode)
     cycles += 8;
     break;
 
+    case 0xBE:
+    hlbuffer = hl[0] << 8 | hl[1];
+    MEMbitbuffer = memory[hlbuffer];
+    MEMbitbuffer.reset(7);
+    memory[hlbuffer] = MEMbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 16;
+    break;
+
+    case 0xBF:
+    Abitbuffer = af[0];
+    Abitbuffer[7] = 0;
+    af[0] = Abitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    case 0xC7:
+    Abitbuffer = af[0];
+    Abitbuffer[0] = 1;
+    af[0] = Abitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
+    case 0xE6:
+    hlbuffer = hl[0] << 8 | hl[1];
+    MEMbitbuffer = memory[hlbuffer];
+    MEMbitbuffer.set(4);
+    memory[hlbuffer] = MEMbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 16;
+    break;
+
+    case 0xEE:
+    hlbuffer = hl[0] << 8 | hl[1];
+    MEMbitbuffer = memory[hlbuffer];
+    MEMbitbuffer.set(5);
+    memory[hlbuffer] = MEMbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 16;
+    break;
+
+    case 0xF6:
+    hlbuffer = hl[0] << 8 | hl[1];
+    MEMbitbuffer = memory[hlbuffer];
+    MEMbitbuffer.set(6);
+    memory[hlbuffer] = MEMbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 16;
+    break;
+
+    case 0xFE:
+    hlbuffer = hl[0] << 8 | hl[1];
+    MEMbitbuffer = memory[hlbuffer];
+    MEMbitbuffer.set(7);
+    memory[hlbuffer] = MEMbitbuffer.to_ulong();
+    pc += 2;
+    cycles += 16;
+    break;
+
+    case 0xFF:
+    Abitbuffer = af[0];
+    Abitbuffer[7] = 1;
+    af[0] = Abitbuffer.to_ulong();
+    pc += 2;
+    cycles += 8;
+    break;
+
     default:
     goto invalid_opcode_jump;
     break;
     }
     break; // Ends entire 0xCB Case
+
+
+case 0xCC:
+Abitbuffer = af[1];
+if(Abitbuffer[7] == 1)
+{
+help0xCD3 = sp[0];
+nn = help0xCD3 << 8 | sp[1];
+help0xCD = (pc + 0x3) >> 8;
+help0xCD2 = (pc + 0x3);
+memory[(nn - 0xFFFF0000) - 0x02] = help0xCD2;
+memory[(nn - 0xFFFF0000) - 0x01] = help0xCD;
+opnn[0] = memory[pc + 2];
+opnn[1] = memory[pc + 1];
+nn = opnn[0] << 8 | opnn[1];
+help0xCD4 = nn;
+pc = help0xCD4;
+sp[1] -= 0x02;
+if(sp[1] == 0xFF || sp[1] == 0xFE)
+{
+sp[0] -= 0x01;
+}
+cycles += 12;
+goto done0xCC;
+}
+pc += 3;
+cycles += 12;
+
+done0xCC:
+break;
 
 case 0xCD:
 help0xCD3 = sp[0];
@@ -1243,6 +1814,56 @@ if(sp[1] == 0xFF || sp[1] == 0xFE)
 sp[0] -= 0x01;
 }
 cycles += 12;
+break;
+
+case 0xCE: // Flags need fixed.
+af[0] = af[0] + memory[pc + 0x01];
+Fbitbuffer = af[1];
+if (Fbitbuffer[4] == 1)
+{
+af[0]++;
+}
+if (Fbitbuffer[4] == 0)
+{
+}
+if (af[0] == 0x00)
+{
+Fbitbuffer[7] = 1;
+Fbitbuffer[6] = 0;
+}
+if (af[0] != 0x00)
+{
+Fbitbuffer[7] = 0;
+Fbitbuffer[6] = 0;
+}
+pc += 2;
+cycles += 8;
+break;
+
+case 0xCF:
+// Note: 0xEF2 has the First bit, while 0xEF has the second.
+pc++;
+backupPC0xEF = pc;
+help0xEF = pc; // to copy the first 8 bits.
+pc = pc>>8; //push the other 8 bits to the right
+help0xEF2 = pc;
+pc = backupPC0xEF;
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = (help0xEF2 - 0xFFFFFF00);
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = (help0xEF - 0xFFFFFF00); // End of copying current PC to mem at SP
+pc = 0x0008;
+cycles += 32;
 break;
 
 case 0xD1:
@@ -1392,6 +2013,20 @@ cycles += 16;
 pc += 3;
 break;
 
+case 0xEE:
+af[0] = memory[pc + 0x01] ^ af[0];
+if(af[0] == 0x0)
+{
+af[1] = 0x80;
+}
+if(af[0] != 0x0)
+{
+af[1] = 0x00;
+}
+pc += 2;
+cycles += 4;
+break;
+
 case 0xEF:
 // Note: 0xEF2 has the First bit, while 0xEF has the second.
 pc++;
@@ -1506,6 +2141,33 @@ cycles += 8;
 pc += 2;
 break;
 
+case 0xFF:
+// Note: 0xEF2 has the First bit, while 0xEF has the second.
+pc++;
+backupPC0xEF = pc;
+help0xEF = pc; // to copy the first 8 bits.
+pc = pc>>8; //push the other 8 bits to the right
+help0xEF2 = pc;
+pc = backupPC0xEF;
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = (help0xEF2 - 0xFFFFFF00);
+sp[1]--;
+if(sp[1] == 0xFF)
+{
+sp[0]--;
+}
+spbuffer = sp[0] << 8 | sp[1];
+memory[spbuffer] = (help0xEF - 0xFFFFFF00); // End of copying current PC to mem at SP
+pc = 0x0038;
+cycles += 32;
+break;
+
+
 default:
 invalid_opcode_jump:
 if (opcode != 0xCB)
@@ -1614,8 +2276,21 @@ memory[0xFF49] = 0xFF;
 memory[0xFF4A] = 0x00;
 memory[0xFF4B] = 0x00;
 memory[0xFFFF] = 0x00;
+
+if (doBios == true)
+{
+FILE* BIOS = fopen("BIOS/GB.BIOS", "rb");
+fseek(BIOS,0,SEEK_END);
+bios_size = ftell(BIOS);
+rewind(BIOS);
+fread(memory,bios_size,1,BIOS);
+fclose(BIOS);
+pc = 0x0000;
+}
 return true;
 }
+
+
 
 void init_memory()
 {
@@ -1625,7 +2300,14 @@ debug_mem_init_again:
 debugmeminit++;
 if(debugmeminit != 0x10000)
 {
-memory[debugmeminit] = 0xFF;
+    if(debugmeminit >= 0xA000)
+    {
+    memory[debugmeminit] = 0xFF;
+    }
+    if(debugmeminit < 0xA000)
+    {
+    memory[debugmeminit] = 0x00;
+    }
 goto debug_mem_init_again;
 }
 if(debugmeminit == 0x10000)
