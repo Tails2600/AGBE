@@ -21,33 +21,29 @@ int main(int argc, char** argv)
     cin>>choice;
     if (choice == 'y')
     {
-    sdl_wanted = true;
-    goto VRAMquestion;
+        sdl_wanted = true;
     }
     if (choice == 'n')
     {
-    sdl_wanted = false;
-    goto beginbeforeinitmemory;
+        sdl_wanted = false;
     }
-    VRAMquestion:
     printf("Would you like a seperate VRAM Debugger Window?\nOption: ");
     cin>>choice;
     if (choice == 'y')
     {
-    VRAMdebugwanted = true;
+        VRAMdebugwanted = true;
     }
     if (choice == 'n')
     {
-    VRAMdebugwanted = false;
+        VRAMdebugwanted = false;
     }
-    beginbeforeinitmemory:
     init_memory();
     if (sdl_wanted == true)
     {
         if( SDL_Init( SDL_INIT_VIDEO ) < 0)
         {
-        printf("SDL2 was Unable to Initialize!");
-        return 1;
+            printf("SDL2 was Unable to Initialize!");
+            return 1;
         }
         AGBE_window = SDL_CreateWindow("AGBE", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160, 144, SDL_WINDOW_SHOWN);
         screenSurface = SDL_GetWindowSurface( AGBE_window );
@@ -58,45 +54,45 @@ int main(int argc, char** argv)
         SDL_RenderPresent(renderer);
         if (VRAMdebugwanted == true)
         {
-        AGBE_VRAM_DEBUG = SDL_CreateWindow("VRAM", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 128, 192, SDL_WINDOW_SHOWN);
-        VRAM_renderer = SDL_CreateRenderer(AGBE_VRAM_DEBUG, -1, SDL_RENDERER_ACCELERATED);
-        SDL_SetRenderDrawColor(VRAM_renderer,0,255,0,255);
-        SDL_RenderClear(VRAM_renderer);
-        SDL_RenderPresent(VRAM_renderer);
+            AGBE_VRAM_DEBUG = SDL_CreateWindow("VRAM", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 128, 192, SDL_WINDOW_SHOWN);
+            VRAM_renderer = SDL_CreateRenderer(AGBE_VRAM_DEBUG, -1, SDL_RENDERER_ACCELERATED);
+            SDL_SetRenderDrawColor(VRAM_renderer,0,255,0,255);
+            SDL_RenderClear(VRAM_renderer);
+            SDL_RenderPresent(VRAM_renderer);
         }
     }
     char *filename;
     printf("Welcome to AGBE %s!\n",AGBE_version);
     if(argv[1] == NULL)
     {
-    char filename2temp[20];
-    printf("Enter Rom Name: ");
-    scanf("%s",filename2temp);
-    filename = filename2temp;
+        char filename2temp[20];
+        printf("Enter Rom Name: ");
+        scanf("%s",filename2temp);
+        filename = filename2temp;
     }
     if(argv[1] != NULL)
     {
-    printf("Rom Automatically detected from Command Line Arguments.\n");
-    filename = argv[1];
+        printf("Rom Automatically detected from Command Line Arguments.\n");
+        filename = argv[1];
     }
     // Beginning of rom loading code
     FILE* rom = fopen(filename, "rb");
     if (rom == NULL)
     {
-    printf("Rom not detected.");
-    return 1;
+        printf("Rom not detected.");
+        return 1;
     }
     fseek(rom,0,SEEK_END);
     rom_size = ftell(rom);
     rewind(rom);
     if (rom_size <= 32768)
     {
-    printf("Rom Size is %i Bytes.\n",rom_size);
+        printf("Rom Size is %i Bytes.\n",rom_size);
     }
     if (rom_size > 32768)
     {
-    printf("Rom Size is larger than 32768 Bytes!\nRom Size is %i Bytes!\nRom is not compatible with AGBE.\nClosing Program.",rom_size);
-    return 1;
+        printf("Rom Size is larger than 32768 Bytes!\nRom Size is %i Bytes!\nRom is not compatible with AGBE.\nClosing Program.",rom_size);
+        return 1;
     }
     fread(memory,rom_size,1,rom);
     fclose(rom);
@@ -106,92 +102,92 @@ int main(int argc, char** argv)
     cin>>choice;
     if (choice == 'n')
     {
-    debugging_enabled = false;
-    goto donewithoptions1;
+        debugging_enabled = false;
+        goto donewithoptions1;
     }
     if (choice == 'y')
     {
-    debugging_enabled = true;
+        debugging_enabled = true;
     }
     printf("Do you want Advanced Console Debugging? (Step by Step) (y = yes, n = no)\nOption: "); // Does what it says.
     cin>>choice; // Get Input from User
     if (choice == 'n') // If choice is No
     {
-    advanced_debugging_enabled = false; // Disables Advanced Debugging
-    goto donewithoptions1; // Does what it says.
+        advanced_debugging_enabled = false; // Disables Advanced Debugging
     }
     if (choice == 'y') // If Choice is Yes
     {
-    advanced_debugging_enabled = true; // Enables advanced debugging.
+        advanced_debugging_enabled = true; // Enables advanced debugging.
     }
     donewithoptions1: // Done with the First set of options.
     printf("Would you like a Log File? (Creates Massive Files!) (y = yes, n = no)\nOption: "); // Does what it says.
     cin>>choice; // Get input from User.
     if (choice == 'y') // If choice is yes...
     {
-    log_file_made = true; // Log File IS made.
-    gamelog = fopen ("log/log.txt", "w+"); // Makes the Log File.
+        log_file_made = true; // Log File IS made.
+        gamelog = fopen ("log/log.txt", "w+"); // Makes the Log File.
     }
     if (choice == 'n') // If choice is no...
     {
-    log_file_made = false; // Log file is NOT made.
+        log_file_made = false; // Log file is NOT made.
     }
     printf("Do you want to use the the BIOS? (BIOS should be located at BIOS/GB.BIOS)\nOption: ");
     cin>>choice;
     if (choice == 'y')
     {
-    doBios = true;
+        doBios = true;
     }
     if (choice == 'n')
     {
-    doBios = false;
+        doBios = false;
     }
     printf("Emulation Started.\n");
     gbPowerOn(); // Powers on the Gameboy/runs Boot Sequence (Unfinished)
-        test_for_sdl2: // A goto statement for a SDL2 Loop (is not disabled by sdl_wanted = false.)
-        handleRegisters(); // Handles registers
-        opcode = memory[pc]; // Sets the next opcode to be executed
-        if(debugging_enabled == true) // If the User wants debugging, this code will execute.
-        {
+    test_for_sdl2: // A goto statement for a SDL2 Loop (is not disabled by sdl_wanted = false.)
+    handleRegisters(); // Handles registers
+    opcode = memory[pc]; // Sets the next opcode to be executed
+    if(debugging_enabled == true) // If the User wants debugging, this code will execute.
+    {
         printf("\nProgram Counter: 0x%X", pc);
         printf("\nCurrent Opcode: 0x%X", opcode);  // Does what it says.
         printf("\nA Register: 0x%X",af[0]);
-        }
-        previous_opcode = opcode; // A variable to keep track of the previous opcode that was executed.
-        next_opcode = memory[pc + 0x01];
-        lyhelp1 = cycles;
-        doOpcode(); // Runs 1 Opcode
-        lyhelp2 = cycles;
+    }
+    previous_opcode = opcode; // A variable to keep track of the previous opcode that was executed.
+    next_opcode = memory[pc + 0x01];
+    lyhelp1 = cycles;
+    doOpcode(); // Runs 1 Opcode
+    lyhelp2 = cycles;
 
-        //if (cycles == 411512 && ime == true) //This setup is hacky and will be replaced in the future.
-        //{
-        //VBlank_Interupt_Needs_Done = true;
-        //}
-        if(sdl_wanted == true) // Handles Rendering
-        {
+    //if (cycles == 411512 && ime == true) //This setup is hacky and will be replaced in the future.
+    //{
+    //VBlank_Interupt_Needs_Done = true;
+    //}
+    if(sdl_wanted == true) // Handles Rendering
+    {
         if(cycles % 5000 == 0) // This is just set here so that things appear on the screen.
         {
         RenderFrame(); // Renders a frame;
-            if (VRAMdebugwanted == true)
+        if (VRAMdebugwanted == true)
             {
-            RenderVRAMFrame(); // Renders a frame in the VRAM Debugger
+                RenderVRAMFrame(); // Renders a frame in the VRAM Debugger
             }
         }
-        }
-        if(lyhelp1 <= 456 * lyhelp3 && lyhelp2 >= 456 * lyhelp3)
-        {
+    }
+    if(lyhelp1 <= 456 * lyhelp3 && lyhelp2 >= 456 * lyhelp3)
+    {
         memory[0xFF44]++;
         lyhelp3++;
         if((memory[0xFF44] - 0xFFFFFF00) == 0x99)
         {
-        memory[0xFF44] = 0x00;
+            memory[0xFF44] = 0x00;
         }
-        }
-        MEMbitbuffer = memory[0xFFFF];
-        checkInterrupts();
-        handleInterupts();  // Handles Interupts
-        if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.
-        {
+    }
+    MEMbitbuffer = memory[0xFFFF];
+    memory[0xFF85]++; // Hack to get tetris to the Title Screen.
+    checkInterrupts();
+    handleInterupts();  // Handles Interupts
+    if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.
+    {
         printf("\nOpcode: 0x%X", opcode); // Does what it says.
         printf("\nA Register: 0x%X", af[0]); // Does what it says.
         printf("\nF Register: 0x%X", af[1]); // Does what it says.
@@ -209,32 +205,32 @@ int main(int argc, char** argv)
         cin>>choice;
         if(choice == 'n')
         {
-        printf("\nProgram Counter: 0x%X\n", pc);
-        printf("Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
-        printf("Cycles: %i\n", cycles);
-        printf("Please see errorlog.txt for more details.\n");
-        printf("Please see memdump for a full Gameboy RAM Dump.\n");
-        if(sdl_wanted == true)
-        {
-        SDL_DestroyWindow(AGBE_window);
-        SDL_DestroyWindow(AGBE_VRAM_DEBUG);
-        SDL_Quit();
-        }
-        close_program = true;
+            printf("\nProgram Counter: 0x%X\n", pc);
+            printf("Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
+            printf("Cycles: %i\n", cycles);
+            printf("Please see errorlog.txt for more details.\n");
+            printf("Please see memdump for a full Gameboy RAM Dump.\n");
+            if(sdl_wanted == true)
+            {
+                SDL_DestroyWindow(AGBE_window);
+                SDL_DestroyWindow(AGBE_VRAM_DEBUG);
+                SDL_Quit();
+            }
+            close_program = true;
 
-        //FILE * mem_dump;
-        //mem_dump = fopen ("log/memdump", "w+");
-        //fwrite (memory , sizeof(char), sizeof(memory), mem_dump);
-        //fclose (mem_dump);
-        ofstream myfile("log/memdump");
-        myfile.write((char *)memory,sizeof(memory));
-        myfile.close();
+            //FILE * mem_dump;
+            //mem_dump = fopen ("log/memdump", "w+");
+            //fwrite (memory , sizeof(char), sizeof(memory), mem_dump);
+            //fclose (mem_dump);
+            ofstream myfile("log/memdump");
+            myfile.write((char *)memory,sizeof(memory));
+            myfile.close();
 
 
         }
-        }
-        if (log_file_made == true)  // If User wants a log file, then this will write stuff to it.
-        {
+    }
+    if (log_file_made == true)  // If User wants a log file, then this will write stuff to it.
+    {
         fprintf (gamelog, "OP %X\n", opcode); // Does what it says.
         fprintf (gamelog, "PC %X\n", pc); // Does what it says.
         fprintf (gamelog, "A %X\n", af[0]); // Does what it says.
@@ -247,37 +243,37 @@ int main(int argc, char** argv)
         fprintf (gamelog, "L %X\n", hl[1]); // Does what it says.
         fprintf (gamelog, "SP %X%X\n", sp[0], sp[1]); // Does what it says.
         fprintf (gamelog, "CYC %d\n", cycles); // Does what it says.
-        }
-        if (sdl_wanted == true)
-        {
+    }
+    if (sdl_wanted == true)
+    {
             while( SDL_PollEvent( &SDL_EVENT_HANDLING)) // While Event to handle Random Stuff
             {
-            if (SDL_EVENT_HANDLING.type == SDL_QUIT) // If the SDL Window is Closed, close the program.
-            {
-                goto close_the_program; // Closes the Program
+                if (SDL_EVENT_HANDLING.type == SDL_QUIT) // If the SDL Window is Closed, close the program.
+                {
+                    goto close_the_program; // Closes the Program
+                }
+                else if (SDL_EVENT_HANDLING.type == SDL_KEYDOWN) // If a key is being pressed, handle controls.
+                {
+                    handle_controls(); // Handle Controls
+                }
             }
-            else if (SDL_EVENT_HANDLING.type == SDL_KEYDOWN) // If a key is being pressed, handle controls.
-            {
-                handle_controls(); // Handle Controls
-            }
-            }
-        }
-        if(close_program == true) // If close_program is true, close the program.
-        {
+    }
+    if(close_program == true) // If close_program is true, close the program.
+    {
         goto close_the_program; // Goes to the operation that closes the program
-        }
-        goto test_for_sdl2; // End of SDL2 Loop
-        close_the_program: // Program Jumps here if close_program is set to true.
-        printf("\nProgram Counter: 0x%X\n", pc);
-        printf("Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
-        printf("Cycles: %i\n", cycles);
-        printf("Please see errorlog.txt for more details.\n");
-        printf("Please see memdump for a full Gameboy RAM Dump.\n");
-        if (sdl_wanted == true)
-        {
+    }
+    goto test_for_sdl2; // End of SDL2 Loop
+    close_the_program: // Program Jumps here if close_program is set to true.
+    printf("\nProgram Counter: 0x%X\n", pc);
+    printf("Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
+    printf("Cycles: %i\n", cycles);
+    printf("Please see errorlog.txt for more details.\n");
+    printf("Please see memdump for a full Gameboy RAM Dump.\n");
+    if (sdl_wanted == true)
+    {
         SDL_DestroyWindow( AGBE_window ); // Destroys the SDL2 Window
         SDL_Quit(); // Quits SDL
-        }
-        close_program = true; // This serves no purpose, but i'm leaving it here for now.
-        return 0; // return 0
+    }
+    close_program = true; // This serves no purpose, but i'm leaving it here for now.
+    return 0; // return 0
 }

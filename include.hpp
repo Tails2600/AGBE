@@ -1,3 +1,4 @@
+// This File just includes the declaration of most variables in the program.
 #include <bits/stdc++.h>
 #include <stdio.h>
 #include <iostream>
