@@ -54,9 +54,11 @@
 		<Unit filename="controls.hpp" />
 		<Unit filename="cpu.h" />
 		<Unit filename="graphics.hpp" />
+		<Unit filename="hacks.hpp" />
 		<Unit filename="include.hpp" />
 		<Unit filename="interupts.hpp" />
 		<Unit filename="main.cpp" />
+		<Unit filename="sound.hpp" />
 		<Unit filename="timers.hpp" />
 		<Extensions>
 			<code_completion />

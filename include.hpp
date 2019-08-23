@@ -13,6 +13,8 @@ unsigned char de[2];
 unsigned char sp[2];
 bool ime;
 // Helper Variables
+unsigned short prev_pc;
+char Title4[4];
 unsigned int bcbuffer;
 unsigned int debuffer;
 unsigned int hlbuffer;
@@ -67,6 +69,7 @@ unsigned short help0xE1;
 char help0xD9[0x2];
 char help0xEF;
 char help0xEF2;
+int8_t help0xE8;
 unsigned short backupPC0xEF;
 std::bitset<1> help0x1F;
 std::bitset<1> MSB_Helper;
@@ -75,6 +78,8 @@ std::bitset<1> Carry_Helper2;
 bool doBios;
 bool VRAMRenderhelp;
 bool cpuHALT;
+int8_t Overflow_test;
+int8_t help0xFE;
 // Variables that Store things like the Current Opcode being Executed
 unsigned char opcode;
 unsigned char previous_opcode;
@@ -89,9 +94,12 @@ bool sdl_wanted;
 char choice;
 bool debugging_enabled;
 bool advanced_debugging_enabled;
+bool gameHacks;
 bool log_file_made;
 int Operating_System;
 char AGBE_version[30];
+bool restartAGBE;
+bool helperforHacks;
 // Variables used for Logging
 FILE * gamelog;
 // Variables that help with Interupt Processing
@@ -142,6 +150,10 @@ bool thingforSDL2render;
 bool VRAMdebugwanted;
 bool help0x9000Render;
 bool mode0x8800;
+
+int OAMxpos;
+int OAMypos;
+int OAMtile;
 // SDL2 Color Palletes
 SDL_Color color_black = {0,0,0,0}; // Black (3)
 SDL_Color color_darkgrey = {0x76, 0x76, 0x76, 0}; // Dark Gray (2)
@@ -149,4 +161,58 @@ SDL_Color color_lightgrey = {0xC2, 0xC2, 0xC2, 0}; // Light Grey (1)
 SDL_Color color_white = {255, 255, 255, 0}; // White (0)
 
 
+
+
 // Other Functions
+FILE * mem_dump;
+FILE * error_log;
+std::bitset<4> before;
+std::bitset<4> after;
+char beforeHcheck;
+
+int halfcarrycheck(int8_t a,int8_t b)
+{
+    before = a >> 4;
+    after = b >> 4;
+    if(before != after)
+    {
+        return 1; // Half Carry Happened.
+    }
+    if(before == after)
+    {
+        return 0; // Half Carry didn't happen.
+    }
+}
+
+int overflowcheck(int8_t a,int8_t b)
+{
+    if(b <= a)
+    {
+        return 1; // Overflow Happened.
+    }
+    if(b > a)
+    {
+        return 0; // Overflow Didn't Happen.
+    }
+}
+
+int negativeoverflowcheck(int8_t a,int8_t b)
+{
+    if(b > a)
+    {
+    return 1;
+    }
+    if(b <= a)
+    {
+    return 0;
+    }
+}
+
+int loopDetect() // Tries to detect if the game is in an Infinite Loop.  Not currently used because it causes lag?
+{
+    if(pc == prev_pc)
+    {
+    printf("In an Infinite Loop that Cannot be Exited?\nClosing Program...\n");
+    close_program = true;
+    }
+}

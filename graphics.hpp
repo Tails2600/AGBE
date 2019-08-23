@@ -1,4 +1,4 @@
-#include "include.hpp"
+#include "sound.hpp"
 void setdrawcolor_white()
 {
     SDL_SetRenderDrawColor(renderer,color_white.r,color_white.g,color_white.b,color_white.a);
@@ -119,6 +119,37 @@ void RenderTile(int xtile, int ytile)
     dummyvalue++; // This is just here so the compiler doesn't complain about the last function being a goto related thing.
     }
 
+void RenderSprite(int OAMdatalocation)
+{
+    OAMypos = memory[OAMdatalocation];
+    OAMxpos = memory[OAMdatalocation + 0x01];
+    OAMtile = memory[OAMdatalocation + 0x02];
+    bitset_id_counter = 7;
+    current_tile_data_location = (0x8000 + ((OAMtile - 0xFFFFFF00) * 0x10));
+
+    rendernewOAMpixel:
+    MEMVRAMbitbuffer = memory[current_tile_data_location];
+    MEMVRAMbitbuffer2 = memory[current_tile_data_location + 1];
+    compare_pixels();
+    SDL_RenderDrawPoint(renderer,OAMxpos,OAMypos);
+    OAMxpos++;
+    bitset_id_counter--;
+    if (OAMxpos % 8 == 0) // Done Drawing Line
+    {
+        OAMxpos -= 8;
+        bitset_id_counter = 7;
+        OAMypos++;
+        current_tile_data_location += 0x02;
+        if (OAMypos % 8 == 0) // Done Drawing Tile
+        {
+            goto donerenderingOAMtile;
+        }
+    }
+    goto rendernewOAMpixel;
+    donerenderingOAMtile:
+    dummyvalue++;
+}
+
 void RenderFrame()
 {
     current_x_tile = 0;
@@ -141,6 +172,11 @@ void RenderFrame()
         goto renderNextTile;
     }
     doneRenderingFrame:
+    RenderSprite(0xFE00);
+
+
+
+
     SDL_RenderPresent(renderer);
 }
 

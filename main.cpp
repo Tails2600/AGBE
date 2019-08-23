@@ -4,6 +4,7 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
+    helperforHacks = false;
     AGBE_version[0] = 'A';
     AGBE_version[1] = 'l';
     AGBE_version[2] = 'p';
@@ -62,6 +63,7 @@ int main(int argc, char** argv)
         }
     }
     char *filename;
+    welcometoagbe:
     printf("Welcome to AGBE %s!\n",AGBE_version);
     if(argv[1] == NULL)
     {
@@ -141,20 +143,33 @@ int main(int argc, char** argv)
     {
         doBios = false;
     }
+    printf("Do you want to use Game Specific Hacks?\nOption: ");
+    cin>>choice;
+    if (choice == 'y')
+    {
+        gameHacks = true;
+    }
+    if (choice == 'n')
+    {
+        gameHacks = false;
+    }
     printf("Emulation Started.\n");
     gbPowerOn(); // Powers on the Gameboy/runs Boot Sequence (Unfinished)
     test_for_sdl2: // A goto statement for a SDL2 Loop (is not disabled by sdl_wanted = false.)
     handleRegisters(); // Handles registers
     opcode = memory[pc]; // Sets the next opcode to be executed
-    if(debugging_enabled == true) // If the User wants debugging, this code will execute.
+    if(debugging_enabled == true && advanced_debugging_enabled == false) // If the User wants debugging, this code will execute.
     {
+        Fbitbuffer = af[1];
         printf("\nProgram Counter: 0x%X", pc);
         printf("\nCurrent Opcode: 0x%X", opcode);  // Does what it says.
-        printf("\nA Register: 0x%X",af[0]);
+        printf("\nA Register: 0x%X\n",af[0]);
+        cout<<"F Register: "<<Fbitbuffer; // Does what it says.
     }
     previous_opcode = opcode; // A variable to keep track of the previous opcode that was executed.
     next_opcode = memory[pc + 0x01];
     lyhelp1 = cycles;
+    prev_pc = pc;
     doOpcode(); // Runs 1 Opcode
     lyhelp2 = cycles;
 
@@ -164,7 +179,7 @@ int main(int argc, char** argv)
     //}
     if(sdl_wanted == true) // Handles Rendering
     {
-        if(cycles % 5000 == 0) // This is just set here so that things appear on the screen.
+        if(cycles % 10000 == 0) // This is just set here so that things appear on the screen.
         {
         RenderFrame(); // Renders a frame;
         if (VRAMdebugwanted == true)
@@ -182,15 +197,30 @@ int main(int argc, char** argv)
             memory[0xFF44] = 0x00;
         }
     }
+    if(memory[0x0135] == 0x49)
+    {
+    VBlank_Interupt_Needs_Done = false;
+    }
     MEMbitbuffer = memory[0xFFFF];
+    memory[0xFF04]++; // I forgot what this does :p
     memory[0xFF85]++; // Hack to get tetris to the Title Screen.
+    //if(pc == 0xC748)
+    //{
+    //advanced_debugging_enabled = true;
+    //}
+    if(gameHacks == true)
+    {
+    processHacks();
+    }
     checkInterrupts();
     handleInterupts();  // Handles Interupts
     if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.
     {
+        spbuffer = sp[0] << 8 | sp[1];
+        Fbitbuffer = af[1];
         printf("\nOpcode: 0x%X", opcode); // Does what it says.
         printf("\nA Register: 0x%X", af[0]); // Does what it says.
-        printf("\nF Register: 0x%X", af[1]); // Does what it says.
+        cout<<endl<<"F Register: "<<Fbitbuffer; // Does what it says.
         printf("\nB Register: 0x%X", bc[0]); // Does what it says.
         printf("\nC Register: 0x%X", bc[1]); // Does what it says.
         printf("\nD Register: 0x%X", de[0]); // Does what it says.
@@ -198,7 +228,7 @@ int main(int argc, char** argv)
         printf("\nH Register: 0x%X", hl[0]); // Does what it says.
         printf("\nL Register: 0x%X", hl[1]); // Does what it says.
         printf("\nProgram Counter: 0x%X", pc); // Does what it says.
-        printf("\nStack Pointer: 0x%X%X", sp[0], sp[1]); // Does what it says.
+        printf("\nStack Pointer: 0x%X",spbuffer); // Does what it says.
         printf("\nJoypad Value: 0x%X", memory[0xFF00]); // Does what it says.
         printf("\nCPU Cycles: %i\n",cycles);
         printf("\nContinue? (Y or N):"); // This option doesn't make a difference.  It's just here to make a sort of STEP Function.
@@ -255,6 +285,11 @@ int main(int argc, char** argv)
                 else if (SDL_EVENT_HANDLING.type == SDL_KEYDOWN) // If a key is being pressed, handle controls.
                 {
                     handle_controls(); // Handle Controls
+                    if(restartAGBE == true)
+                    {
+                    restartAGBE = false;
+                    goto welcometoagbe;
+                    }
                 }
             }
     }
@@ -264,11 +299,15 @@ int main(int argc, char** argv)
     }
     goto test_for_sdl2; // End of SDL2 Loop
     close_the_program: // Program Jumps here if close_program is set to true.
-    printf("\nProgram Counter: 0x%X\n", pc);
-    printf("Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
-    printf("Cycles: %i\n", cycles);
-    printf("Please see errorlog.txt for more details.\n");
-    printf("Please see memdump for a full Gameboy RAM Dump.\n");
+    //printf("\nProgram Counter: 0x%X\n", pc);
+    //printf("Stack Pointer: 0x%X%X\n", sp[0], sp[1]);
+    //printf("Cycles: %i\n", cycles);
+    //printf("Please see errorlog.txt for more details.\n");
+    //printf("Please see memdump for a full Gameboy RAM Dump.\n");
+    FILE * mem_dump;
+    mem_dump = fopen ("log/memdump", "w+");
+    fwrite (memory , sizeof(char), sizeof(memory), mem_dump);
+    fclose (mem_dump);
     if (sdl_wanted == true)
     {
         SDL_DestroyWindow( AGBE_window ); // Destroys the SDL2 Window
