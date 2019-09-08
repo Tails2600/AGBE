@@ -62,7 +62,6 @@ int main(int argc, char** argv)
             SDL_RenderPresent(VRAM_renderer);
         }
     }
-    char *filename;
     welcometoagbe:
     printf("Welcome to AGBE %s!\n",AGBE_version);
     if(argv[1] == NULL)
@@ -157,20 +156,24 @@ int main(int argc, char** argv)
     gbPowerOn(); // Powers on the Gameboy/runs Boot Sequence (Unfinished)
     test_for_sdl2: // A goto statement for a SDL2 Loop (is not disabled by sdl_wanted = false.)
     handleRegisters(); // Handles registers
-    opcode = memory[pc]; // Sets the next opcode to be executed
     if(debugging_enabled == true && advanced_debugging_enabled == false) // If the User wants debugging, this code will execute.
     {
         Fbitbuffer = af[1];
         printf("\nProgram Counter: 0x%X", pc);
         printf("\nCurrent Opcode: 0x%X", opcode);  // Does what it says.
+        printf("\nNext Opcode: 0x%X", next_opcode);
         printf("\nA Register: 0x%X\n",af[0]);
         cout<<"F Register: "<<Fbitbuffer; // Does what it says.
     }
+    opcode = memory[pc]; // Sets the next opcode to be executed
     previous_opcode = opcode; // A variable to keep track of the previous opcode that was executed.
     next_opcode = memory[pc + 0x01];
     lyhelp1 = cycles;
     prev_pc = pc;
+    //printf("opcode: 0x%X\n",opcode);
     doOpcode(); // Runs 1 Opcode
+    //memory[0xFF00] = 0xCF;
+    //memory[0xFF80] = 0x80;
     lyhelp2 = cycles;
 
     //if (cycles == 411512 && ime == true) //This setup is hacky and will be replaced in the future.
@@ -181,6 +184,7 @@ int main(int argc, char** argv)
     {
         if(cycles % 10000 == 0) // This is just set here so that things appear on the screen.
         {
+        printf("FF80: 0x%X\n",((memory[0xFF80] - 0xFFFFFF00) - 0x00000100));
         RenderFrame(); // Renders a frame;
         if (VRAMdebugwanted == true)
             {
@@ -197,23 +201,25 @@ int main(int argc, char** argv)
             memory[0xFF44] = 0x00;
         }
     }
-    if(memory[0x0135] == 0x49)
-    {
-    VBlank_Interupt_Needs_Done = false;
-    }
-    MEMbitbuffer = memory[0xFFFF];
+    MEMbitbuffer = memory[0xFFFF]; // I forgot what this does.
     memory[0xFF04]++; // I forgot what this does :p
     memory[0xFF85]++; // Hack to get tetris to the Title Screen.
-    //if(pc == 0xC748)
-    //{
+    if(pc == 0x0281)
+    {
     //advanced_debugging_enabled = true;
-    //}
+    }
     if(gameHacks == true)
     {
     processHacks();
     }
-    checkInterrupts();
-    handleInterupts();  // Handles Interupts
+    //checkInterrupts();  // DOESN'T WORK
+    //handleInterupts();  // Handles Interupts
+    handle_controls();
+    otherThings(); // Holds other random code
+    if(pc == 0x0038)
+    {
+        close_program = true;
+    }
     if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.
     {
         spbuffer = sp[0] << 8 | sp[1];
@@ -231,8 +237,13 @@ int main(int argc, char** argv)
         printf("\nStack Pointer: 0x%X",spbuffer); // Does what it says.
         printf("\nJoypad Value: 0x%X", memory[0xFF00]); // Does what it says.
         printf("\nCPU Cycles: %i\n",cycles);
-        printf("\nContinue? (Y or N):"); // This option doesn't make a difference.  It's just here to make a sort of STEP Function.
+        printf("FF85: 0x%X\n",memory[0xFF85]);
+        printf("Continue? (Y or N):"); // This option doesn't make a difference.  It's just here to make a sort of STEP Function.
         cin>>choice;
+        if(choice == 'f')
+        {
+            advanced_debugging_enabled = false;
+        }
         if(choice == 'n')
         {
             printf("\nProgram Counter: 0x%X\n", pc);
@@ -278,13 +289,14 @@ int main(int argc, char** argv)
     {
             while( SDL_PollEvent( &SDL_EVENT_HANDLING)) // While Event to handle Random Stuff
             {
+                //handle_controls();
                 if (SDL_EVENT_HANDLING.type == SDL_QUIT) // If the SDL Window is Closed, close the program.
                 {
                     goto close_the_program; // Closes the Program
                 }
-                else if (SDL_EVENT_HANDLING.type == SDL_KEYDOWN) // If a key is being pressed, handle controls.
-                {
-                    handle_controls(); // Handle Controls
+                if (SDL_EVENT_HANDLING.type == SDL_KEYDOWN) // If a key is being pressed, handle controls.
+                {   // Handle Controls
+                    //handle_controls();
                     if(restartAGBE == true)
                     {
                     restartAGBE = false;

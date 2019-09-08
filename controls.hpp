@@ -1,39 +1,162 @@
 #include <SDL2/SDL.h>
 #include "interupts.hpp"
 
-void handle_controls()
+int handle_controls2()
 {
+    MEMbitbuffer = memory[0xFF00];
+    MEMbitbuffer[0] = 1;
+    MEMbitbuffer[1] = 1;
+    MEMbitbuffer[2] = 1;
+    MEMbitbuffer[3] = 1;
+    memory[0xFF00] = MEMbitbuffer.to_ulong();
+}
 
-    switch( SDL_EVENT_HANDLING.key.keysym.sym )
+int handle_controls()
+{
+    if(memory[0xFF00] == 0x10) // P14
     {
-        case SDLK_UP:
-            // Handle Up
-            memory[0xFF00] = memory[0xFF00] + 0x40;
+        memory[0xFF00] = 0xDF;
+    }
+    if(memory[0xFF00] == 0x20) // P15
+    {
+        memory[0xFF00] = 0xEF;
+    }
+    if(memory[0xFF00] == 0x30) // Disable P14 and P15
+    {
+        memory[0xFF00] = 0xCF;
+    }
+    //printf("FF00: 0x%X\n",(memory[0xFF00] - 0xFFFFFF00));
+    MEMbitbuffer = memory[0xFF00];
+    MEMbitbuffer[7] = 1;
+    MEMbitbuffer[6] = 1;
+    MEMbitbuffer[3] = 1;
+    MEMbitbuffer[2] = 1;
+    MEMbitbuffer[1] = 1;
+    MEMbitbuffer[0] = 1;
+    memory[0xFF00] = MEMbitbuffer.to_ulong();
+
+
+        MEMbitbuffer = memory[0xFF00];
+        switch( SDL_EVENT_HANDLING.key.keysym.sym )
+        {
+
+        case SDLK_UP: // Up
+            if(MEMbitbuffer[4] == 0)
+            {
+                if(SDL_EVENT_HANDLING.type == SDL_KEYDOWN)
+                {
+                MEMbitbuffer[2] = 0;
+                }
+                if(SDL_EVENT_HANDLING.type == SDL_KEYUP)
+                {
+                MEMbitbuffer[2] = 1;
+                }
+            }
         break;
 
         case SDLK_DOWN:
             // Handle Down
-            memory[0xFF00] = memory[0xFF00] + 0x80;
+            if(MEMbitbuffer[4] == 0)
+            {
+                if(SDL_EVENT_HANDLING.type == SDL_KEYDOWN)
+                {
+                MEMbitbuffer[3] = 0;
+                }
+                if(SDL_EVENT_HANDLING.type == SDL_KEYUP)
+                {
+                MEMbitbuffer[3] = 1;
+                }
+            }
         break;
 
         case SDLK_LEFT:
             // Handle Left
-            memory[0xFF00] = memory[0xFF00] + 0x20;
+            if(MEMbitbuffer[4] == 0)
+            {
+                if(SDL_EVENT_HANDLING.type == SDL_KEYDOWN)
+                {
+                MEMbitbuffer[1] = 0;
+                }
+                if(SDL_EVENT_HANDLING.type == SDL_KEYUP)
+                {
+                MEMbitbuffer[1] = 1;
+                }
+            }
         break;
 
         case SDLK_RIGHT:
             // Handle Right
-            memory[0xFF00] = memory[0xFF00] + 0x10;
+            if(MEMbitbuffer[4] == 0)
+            {
+                if(SDL_EVENT_HANDLING.type == SDL_KEYDOWN)
+                {
+                MEMbitbuffer[0] = 0;
+                }
+                if(SDL_EVENT_HANDLING.type == SDL_KEYUP)
+                {
+                MEMbitbuffer[0] = 1;
+                }
+            }
         break;
 
-        case SDLK_z:
+        case SDLK_1:
             // Handle B
-            memory[0xFF00] = memory[0xFF00] + 0x02;
+            if(MEMbitbuffer[5] == 0)
+            {
+                if(SDL_EVENT_HANDLING.type == SDL_KEYDOWN)
+                {
+                MEMbitbuffer[1] = 0;
+                }
+                if(SDL_EVENT_HANDLING.type == SDL_KEYUP)
+                {
+                MEMbitbuffer[1] = 1;
+                }
+            }
         break;
 
-        case SDLK_x:
+        case SDLK_2:
             // Handle A
-            memory[0xFF00] = memory[0xFF00] + 0x01;
+            if(MEMbitbuffer[5] == 0)
+            {
+                if(SDL_EVENT_HANDLING.type == SDL_KEYDOWN)
+                {
+                MEMbitbuffer[0] = 0;
+                }
+                if(SDL_EVENT_HANDLING.type == SDL_KEYUP)
+                {
+                MEMbitbuffer[0] = 1;
+                }
+            }
+        break;
+
+        case SDLK_RETURN:
+            // Handle Start
+            if(MEMbitbuffer[5] == 0)
+            {
+                if(SDL_EVENT_HANDLING.type == SDL_KEYDOWN)
+                {
+                MEMbitbuffer[3] = 0;
+                }
+                if(SDL_EVENT_HANDLING.type == SDL_KEYUP)
+                {
+                MEMbitbuffer[3] = 1;
+                }
+            }
+        break;
+
+        case SDLK_BACKSPACE:
+            // Handle Select
+            if(MEMbitbuffer[5] == 0)
+            {
+                if(SDL_EVENT_HANDLING.type == SDL_KEYDOWN)
+                {
+                MEMbitbuffer[2] = 0;
+                }
+                if(SDL_EVENT_HANDLING.type == SDL_KEYUP)
+                {
+                MEMbitbuffer[2] = 1;
+                }
+            }
         break;
 
         case SDLK_o:
@@ -44,13 +167,8 @@ void handle_controls()
             mode0x8800 = true;
         break;
 
-        case SDLK_RETURN:
-            // Handle Start
-            memory[0xFF00] = memory[0xFF00] + 0x08;
-        break;
 
         case SDLK_SPACE: // This is currently being used as a way to exit the program.
-            // Handle Select
             //memory[0xFF00] = memory[0xFF00] + 0x04;
             printf("\npc: 0x%X",pc);
             printf("\nop: 0x%X",opcode);
@@ -60,13 +178,11 @@ void handle_controls()
             printf("\nhl: 0x%X%X",hl[0],hl[1]);
             printf("\nsp: 0x%X%X",sp[0],sp[1]);
             printf("\ncycles: %i",cycles);
+            printf("\njoypad: 0x%X",memory[0xFF00]);
             close_program = true;
         break;
 
-        case SDLK_l:
-        break;
-    } // End of Switch Case
+        }// End of Switch Case
 
-
-
+    memory[0xFF00] = MEMbitbuffer.to_ulong();
 }

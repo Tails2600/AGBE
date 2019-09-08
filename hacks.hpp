@@ -37,8 +37,24 @@ if (Title4[0] == 'D' && Title4[1] == 'R' && Title4[2] == '.' && Title4[3] == 'M'
         pc = 0x0B81;
     }
 }
+if (Title4[0] == 'T' && Title4[1] == 'E' && Title4[2] == 'T' && Title4[3] == 'R') // Tetris
+{
+    int16_t tetrisCounter;
+    if(helperforHacks == false)
+    {
+        helperforHacks = true;
+        printf("Tetris Hack Enabled.\n");
+    }
+    tetrisCounter++;
+    if(pc == 0x036E && tetrisCounter == 10)
+    {
+        pc = 0x0040;
+    }
+}
+if (Title4[0] == 'T' && Title4[1] == 'E' && Title4[2] == 'N' && Title4[3] == 'N') // Tennis
+{
 
-
+}
 
 
 

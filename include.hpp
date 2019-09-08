@@ -13,14 +13,17 @@ unsigned char de[2];
 unsigned char sp[2];
 bool ime;
 // Helper Variables
+int64_t otherCounter;
+char *filename;
 unsigned short prev_pc;
 char Title4[4];
 unsigned int bcbuffer;
 unsigned int debuffer;
 unsigned int hlbuffer;
-unsigned int nnbuffer;
+unsigned short nnbuffer;
 unsigned int nbuffer;
 unsigned int spbuffer;
+short membuffer;
 int8_t tem;
 int64_t lyhelp1;
 int64_t lyhelp2;
@@ -80,6 +83,11 @@ bool VRAMRenderhelp;
 bool cpuHALT;
 int8_t Overflow_test;
 int8_t help0xFE;
+bool helpOR = false;
+int8_t bitcount;
+uint16_t helpEA;
+uint8_t helpEA2;
+uint8_t helpEA3;
 // Variables that Store things like the Current Opcode being Executed
 unsigned char opcode;
 unsigned char previous_opcode;
@@ -215,4 +223,20 @@ int loopDetect() // Tries to detect if the game is in an Infinite Loop.  Not cur
     printf("In an Infinite Loop that Cannot be Exited?\nClosing Program...\n");
     close_program = true;
     }
+}
+
+void otherThings() // Parts of code that I had no Idea where to put
+{
+    otherCounter++;
+    // Prevents the Game from Writing to Rom?  Currently doesn't do it every frame do to lag.
+    if(otherCounter % 10 == 0x00)
+    {
+    FILE* rom = fopen(filename, "rb");
+    fseek(rom,0,SEEK_END);
+    rom_size = ftell(rom);
+    rewind(rom);
+    fread(memory,rom_size,1,rom);
+    fclose(rom);
+    }
+
 }
