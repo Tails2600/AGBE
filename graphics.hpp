@@ -117,37 +117,47 @@ void RenderTile(int xtile, int ytile)
     goto rendernewpixel;
     donerenderingtile:
     dummyvalue++; // This is just here so the compiler doesn't complain about the last function being a goto related thing.
-    }
+}
 
-void RenderSprite(int OAMdatalocation)
+void RenderSprite2(uint8_t xcordi, uint8_t ycordi, uint16_t vramTile)
 {
-    OAMypos = memory[OAMdatalocation];
-    OAMxpos = memory[OAMdatalocation + 0x01];
-    OAMtile = memory[OAMdatalocation + 0x02];
+    currentOAMxpixel = xcordi;
     bitset_id_counter = 7;
-    current_tile_data_location = (0x8000 + ((OAMtile - 0xFFFFFF00) * 0x10));
+    currentOAMypixel = ycordi;
+    currentOAMxpixel = currentOAMxpixel - 0x0F;
+    currentOAMypixel = currentOAMypixel - 0x10;
 
-    rendernewOAMpixel:
-    MEMVRAMbitbuffer = memory[current_tile_data_location];
-    MEMVRAMbitbuffer2 = memory[current_tile_data_location + 1];
-    compare_pixels();
-    SDL_RenderDrawPoint(renderer,OAMxpos,OAMypos);
-    OAMxpos++;
-    bitset_id_counter--;
-    if (OAMxpos % 8 == 0) // Done Drawing Line
+    oamdataloc2 = (0x8000 + ((vramTile - 0xFFFFFF00) * 0x10));
+
+    if(oamdataloc2 > 0x9000)
     {
-        OAMxpos -= 8;
+        oamdataloc2 -= 0x1000;
+    }
+    //printf("OAMDATALOC2: 0x%X\n",oamdataloc2);
+    currentxBuffer = currentOAMxpixel + 0x08;
+    currentyBuffer = currentOAMypixel + 0x08;
+    rendernewpixel:
+    MEMVRAMbitbuffer = memory[oamdataloc2];
+    MEMVRAMbitbuffer2 = memory[oamdataloc2 + 1];
+    compare_pixels();
+    SDL_RenderDrawPoint(renderer,currentOAMxpixel,currentOAMypixel);
+    currentOAMxpixel++;
+    bitset_id_counter--;
+
+    if (currentOAMxpixel == currentxBuffer) // Done Drawing Line
+    {
+        currentOAMxpixel -= 8;
         bitset_id_counter = 7;
-        OAMypos++;
-        current_tile_data_location += 0x02;
-        if (OAMypos % 8 == 0) // Done Drawing Tile
+        currentOAMypixel++;
+        oamdataloc2 += 0x02;
+        if (currentOAMypixel == currentyBuffer) // Done Drawing Tile
         {
-            goto donerenderingOAMtile;
+            goto donerenderingtile;
         }
     }
-    goto rendernewOAMpixel;
-    donerenderingOAMtile:
-    dummyvalue++;
+    goto rendernewpixel;
+    donerenderingtile:
+    dummyvalue++; // This is just here so the compiler doesn't complain about the last function being a goto related thing.
 }
 
 void RenderFrame()
@@ -172,10 +182,49 @@ void RenderFrame()
         goto renderNextTile;
     }
     doneRenderingFrame:
-    RenderSprite(0xFE00);
+    OAMhelp = memory[0xFF46];
+    oamData = OAMhelp << 8 | 0x00;
+    oamCounter = 0xA0;
 
-
-
+    againSprite:
+    OAMy = memory[oamData];
+    OAMx = memory[oamData + 0x01];
+    OAMtile = memory[oamData + 0x02];
+    RenderSprite2(OAMx,OAMy,OAMtile);
+    oamData += 0x04;
+    oamCounter -= 0x04;
+    if(oamCounter == 0x00)
+    {
+        goto doneSprite;
+    }
+    goto againSprite;
+    doneSprite:
+    /*
+    RenderSprite(0xC004);
+    RenderSprite(0xC008);
+    RenderSprite(0xC00C);
+    RenderSprite(0xC010);
+    RenderSprite(0xC014);
+    RenderSprite(0xC018);
+    RenderSprite(0xC01C);
+    RenderSprite(0xC020);
+    RenderSprite(0xC024);
+    RenderSprite(0xC028);
+    RenderSprite(0xC02C);
+    RenderSprite(0xC030);
+    RenderSprite(0xC034);
+    RenderSprite(0xC038);
+    RenderSprite(0xC03C);
+    RenderSprite(0xC040);
+    RenderSprite(0xC044);
+    RenderSprite(0xC048);
+    RenderSprite(0xC04C);
+    RenderSprite(0xC050);
+    RenderSprite(0xC054);
+    RenderSprite(0xC058);
+    RenderSprite(0xC05C);
+    RenderSprite(0xC060);
+    */
 
     SDL_RenderPresent(renderer);
 }

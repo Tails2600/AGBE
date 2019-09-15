@@ -1,6 +1,36 @@
 #include <SDL2/SDL.h>
 #include "interupts.hpp"
 
+int handle_controls3()
+{
+    switch( SDL_EVENT_HANDLING.key.keysym.sym )
+        {
+        case SDLK_o:
+            mode0x8800 = false;
+        break;
+
+        case SDLK_p:
+            mode0x8800 = true;
+        break;
+
+
+        case SDLK_SPACE: // This is currently being used as a way to exit the program.
+            //memory[0xFF00] = memory[0xFF00] + 0x04;
+            printf("\npc: 0x%X",pc);
+            printf("\nop: 0x%X",opcode);
+            printf("\naf: 0x%X%X",af[0],af[1]);
+            printf("\nbc: 0x%X%X",bc[0],bc[1]);
+            printf("\nde: 0x%X%X",de[0],de[1]);
+            printf("\nhl: 0x%X%X",hl[0],hl[1]);
+            printf("\nsp: 0x%X%X",sp[0],sp[1]);
+            printf("\ncycles: %i",cycles);
+            printf("\njoypad: 0x%X",memory[0xFF00]);
+            close_program = true;
+        break;
+
+        }
+}
+
 int handle_controls2()
 {
     MEMbitbuffer = memory[0xFF00];
@@ -41,6 +71,7 @@ int handle_controls()
         {
 
         case SDLK_UP: // Up
+
             if(MEMbitbuffer[4] == 0)
             {
                 if(SDL_EVENT_HANDLING.type == SDL_KEYDOWN)
@@ -99,7 +130,7 @@ int handle_controls()
             }
         break;
 
-        case SDLK_1:
+        case SDLK_LCTRL:
             // Handle B
             if(MEMbitbuffer[5] == 0)
             {
@@ -114,7 +145,7 @@ int handle_controls()
             }
         break;
 
-        case SDLK_2:
+        case SDLK_LALT:
             // Handle A
             if(MEMbitbuffer[5] == 0)
             {
@@ -157,29 +188,6 @@ int handle_controls()
                 MEMbitbuffer[2] = 1;
                 }
             }
-        break;
-
-        case SDLK_o:
-            mode0x8800 = false;
-        break;
-
-        case SDLK_p:
-            mode0x8800 = true;
-        break;
-
-
-        case SDLK_SPACE: // This is currently being used as a way to exit the program.
-            //memory[0xFF00] = memory[0xFF00] + 0x04;
-            printf("\npc: 0x%X",pc);
-            printf("\nop: 0x%X",opcode);
-            printf("\naf: 0x%X%X",af[0],af[1]);
-            printf("\nbc: 0x%X%X",bc[0],bc[1]);
-            printf("\nde: 0x%X%X",de[0],de[1]);
-            printf("\nhl: 0x%X%X",hl[0],hl[1]);
-            printf("\nsp: 0x%X%X",sp[0],sp[1]);
-            printf("\ncycles: %i",cycles);
-            printf("\njoypad: 0x%X",memory[0xFF00]);
-            close_program = true;
         break;
 
         }// End of Switch Case

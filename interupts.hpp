@@ -2,19 +2,21 @@
 
 int checkInterrupts()
 {
-  //  if(Interrupts_Enabled == true)
-   // {
-        if(memory[0xFF44] == 0x90) //65664
+    //if(interruptEnable == true)
+    //{
+        if(memory[0xFF44] == 0xFFFFFF90) //65664
         {
             MEMbitbuffer = memory[0xFF0F];
             MEMbitbuffer[0] = 1;
+            memory[0xFF0F] = MEMbitbuffer.to_ulong();
         }
         MEMbitbuffer = memory[0xFF0F];
         if(MEMbitbuffer[0] == 1) // VBlank
         {
             MEMbitbuffer = memory[0xFFFF];
-            if(MEMbitbuffer[0] == 1)
+            if(MEMbitbuffer[0] == 1 && interruptEnable == true)
             {
+                //advanced_debugging_enabled = true;
                 printf("VBlank\n");
                 help0xCD3 = sp[0];
                 nn = help0xCD3 << 8 | sp[1];
@@ -48,6 +50,7 @@ int checkInterrupts()
     //if(Interupt_thing == true)
     //{
     //    VBlank_Interupt_Needs_Done = true;
+    //}
     //}
 }
 

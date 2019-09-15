@@ -12,6 +12,15 @@ unsigned char bc[2];
 unsigned char de[2];
 unsigned char sp[2];
 bool ime;
+// MBC Stuff
+char tempROM[0x4000];
+FILE * tempROMfile;
+int MBCcountHelp;
+uint32_t bankSwitch;
+uint32_t romLocate;
+char tempROM2[16000000]; // 16 MB
+uint16_t MBCcount2;
+
 // Helper Variables
 int64_t otherCounter;
 char *filename;
@@ -88,6 +97,7 @@ int8_t bitcount;
 uint16_t helpEA;
 uint8_t helpEA2;
 uint8_t helpEA3;
+char help0x18;
 // Variables that Store things like the Current Opcode being Executed
 unsigned char opcode;
 unsigned char previous_opcode;
@@ -159,9 +169,24 @@ bool VRAMdebugwanted;
 bool help0x9000Render;
 bool mode0x8800;
 
-int OAMxpos;
-int OAMypos;
-int OAMtile;
+int AGBEwinx = 160;
+int AGBEwiny = 144;
+int VRAMwinx = 128;
+int VRAMwiny = 192;
+bool helpThingWIN = false;
+
+uint8_t OAMhelp;
+unsigned short oamData;
+unsigned char OAMx;
+uint8_t currentxBuffer;
+uint8_t currentyBuffer;
+unsigned char OAMy;
+unsigned char OAMtile;
+uint8_t currentOAMxpixel;
+uint8_t currentOAMypixel;
+unsigned short oamdataloc2;
+bool interruptEnable = false;
+uint8_t oamCounter;
 // SDL2 Color Palletes
 SDL_Color color_black = {0,0,0,0}; // Black (3)
 SDL_Color color_darkgrey = {0x76, 0x76, 0x76, 0}; // Dark Gray (2)
@@ -225,10 +250,16 @@ int loopDetect() // Tries to detect if the game is in an Infinite Loop.  Not cur
     }
 }
 
+bool mbcExist;
+
 void otherThings() // Parts of code that I had no Idea where to put
 {
     otherCounter++;
-    // Prevents the Game from Writing to Rom?  Currently doesn't do it every frame do to lag.
+    // Prevents the Game from Writing to Rom?  Currently doesn't do it every opcode do to lag.
+    if(mbcExist == true)
+    {
+        goto noromwrite;
+    }
     if(otherCounter % 10 == 0x00)
     {
     FILE* rom = fopen(filename, "rb");
@@ -238,5 +269,19 @@ void otherThings() // Parts of code that I had no Idea where to put
     fread(memory,rom_size,1,rom);
     fclose(rom);
     }
+    noromwrite:
+    // Handles FF40
+    /*
+    MEMbitbuffer = memory[0xFF40];
+    if(MEMbitbuffer[3] == 0)
+    {
+        mode0x8800 = false;
+    }
+    if(MEMbitbuffer[3] == 1)
+    {
+        mode0x8800 = true;
+    }
+    */
 
+    dummyvalue++;
 }

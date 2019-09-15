@@ -14,9 +14,9 @@ int main(int argc, char** argv)
     AGBE_version[6] = 'v';
     AGBE_version[7] = '0';
     AGBE_version[8] = '.';
-    AGBE_version[9] = '1';
-    AGBE_version[10] = '.';
-    AGBE_version[11] = '1';
+    AGBE_version[9] = '2';
+    AGBE_version[10] = ' ';
+    AGBE_version[11] = ' ';
     mode0x8800 = false;
     printf("Before we begin, do you want to enable SDL2? (y = yes, n = no)\nSDL2 is for Graphics and Input.\nOption: ");
     cin>>choice;
@@ -46,7 +46,7 @@ int main(int argc, char** argv)
             printf("SDL2 was Unable to Initialize!");
             return 1;
         }
-        AGBE_window = SDL_CreateWindow("AGBE", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 160, 144, SDL_WINDOW_SHOWN);
+        AGBE_window = SDL_CreateWindow("AGBE v0.2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 320, 288, SDL_WINDOW_RESIZABLE);
         screenSurface = SDL_GetWindowSurface( AGBE_window );
         renderer = SDL_CreateRenderer(AGBE_window, -1, SDL_RENDERER_ACCELERATED);
         texture = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_TARGET,160,144);
@@ -55,7 +55,7 @@ int main(int argc, char** argv)
         SDL_RenderPresent(renderer);
         if (VRAMdebugwanted == true)
         {
-            AGBE_VRAM_DEBUG = SDL_CreateWindow("VRAM", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 128, 192, SDL_WINDOW_SHOWN);
+            AGBE_VRAM_DEBUG = SDL_CreateWindow("VRAM", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 256, 384, SDL_WINDOW_RESIZABLE);
             VRAM_renderer = SDL_CreateRenderer(AGBE_VRAM_DEBUG, -1, SDL_RENDERER_ACCELERATED);
             SDL_SetRenderDrawColor(VRAM_renderer,0,255,0,255);
             SDL_RenderClear(VRAM_renderer);
@@ -89,14 +89,18 @@ int main(int argc, char** argv)
     if (rom_size <= 32768)
     {
         printf("Rom Size is %i Bytes.\n",rom_size);
+        fread(memory,rom_size,1,rom);
+        fclose(rom);
     }
     if (rom_size > 32768)
     {
-        printf("Rom Size is larger than 32768 Bytes!\nRom Size is %i Bytes!\nRom is not compatible with AGBE.\nClosing Program.",rom_size);
-        return 1;
+        printf("Rom Size is larger than 32768 Bytes!\nRom Size is %i Bytes!\nRom only partially loaded into RAM!",rom_size);
+        tempROMfile = fopen(filename,"rb");
+        fread(tempROM2,rom_size,1,tempROMfile);
+        fclose(tempROMfile);
+        fread(memory,0x8000,1,rom);
+        fclose(rom);
     }
-    fread(memory,rom_size,1,rom);
-    fclose(rom);
     // End of rom loading Code.
     printf("Rom was loaded.\n");
     printf("Do you want Console Debugging? (y = yes, n = no)\nOption: "); // Does what it says.
@@ -172,6 +176,7 @@ int main(int argc, char** argv)
     prev_pc = pc;
     //printf("opcode: 0x%X\n",opcode);
     doOpcode(); // Runs 1 Opcode
+    handleMBC();
     //memory[0xFF00] = 0xCF;
     //memory[0xFF80] = 0x80;
     lyhelp2 = cycles;
@@ -182,9 +187,11 @@ int main(int argc, char** argv)
     //}
     if(sdl_wanted == true) // Handles Rendering
     {
-        if(cycles % 10000 == 0) // This is just set here so that things appear on the screen.
+        SDL_RenderSetLogicalSize(renderer, 160,144);
+        SDL_RenderSetLogicalSize(VRAM_renderer, 128,192);
+        if(cycles % 10000 <= 0x03 && cycles % 10000 >= 0x00) // This is just set here so that things appear on the screen.
         {
-        printf("FF80: 0x%X\n",((memory[0xFF80] - 0xFFFFFF00) - 0x00000100));
+        //printf("FF80: 0x%X\n",((memory[0xFF80] - 0xFFFFFF00) - 0x00000100));
         RenderFrame(); // Renders a frame;
         if (VRAMdebugwanted == true)
             {
@@ -192,7 +199,8 @@ int main(int argc, char** argv)
             }
         }
     }
-    if(lyhelp1 <= 456 * lyhelp3 && lyhelp2 >= 456 * lyhelp3)
+    //if(lyhelp1 <= 456 * lyhelp3 && lyhelp2 >= 456 * lyhelp3)
+    if(cycles % 456 == 0x00)
     {
         memory[0xFF44]++;
         lyhelp3++;
@@ -202,11 +210,15 @@ int main(int argc, char** argv)
         }
     }
     MEMbitbuffer = memory[0xFFFF]; // I forgot what this does.
-    memory[0xFF04]++; // I forgot what this does :p
-    memory[0xFF85]++; // Hack to get tetris to the Title Screen.
-    if(pc == 0x0281)
+    if(cycles % 240 <= 0x03 && cycles % 240 >= 0x00)
     {
-    //advanced_debugging_enabled = true;
+        memory[0xFF04]++; // I forgot what this does :p
+    }
+    memory[0xFF85]++; // Hack to get tetris to the Title Screen.
+    memory[0xFF41]++;
+    if(pc == 0x4ADE)
+    {
+       // advanced_debugging_enabled = true;
     }
     if(gameHacks == true)
     {
@@ -289,7 +301,7 @@ int main(int argc, char** argv)
     {
             while( SDL_PollEvent( &SDL_EVENT_HANDLING)) // While Event to handle Random Stuff
             {
-                //handle_controls();
+                handle_controls3();
                 if (SDL_EVENT_HANDLING.type == SDL_QUIT) // If the SDL Window is Closed, close the program.
                 {
                     goto close_the_program; // Closes the Program
@@ -309,6 +321,7 @@ int main(int argc, char** argv)
     {
         goto close_the_program; // Goes to the operation that closes the program
     }
+
     goto test_for_sdl2; // End of SDL2 Loop
     close_the_program: // Program Jumps here if close_program is set to true.
     //printf("\nProgram Counter: 0x%X\n", pc);

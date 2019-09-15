@@ -382,8 +382,16 @@ int doOpcode()
         break;
 
         case 0x18: // Flag Checked
-            nbuffer = memory[pc + 1];
-            pc = pc + nbuffer;
+            help0x18 = memory[pc + 1];
+            if(help0x18 <= 0x7F)
+            {
+            pc = pc + help0x18;
+            }
+            if(help0x18 >= 0x80)
+            {
+            pc = pc + help0x18;
+            pc = pc - 0x0100;
+            }
             cycles += 8;
             pc += 2;
         break;
@@ -493,17 +501,25 @@ int doOpcode()
         break;
 
         case 0x20: // Flag Checked
-            pc +=2;
             Fbitbuffer = af[1];
             if(Fbitbuffer[7] == 0)
             {
                 cycles += 8;
-                pc = pc + memory[pc - 1];
+                if(memory[pc + 1] <= 0x7F)
+                {
+                pc = pc + memory[pc + 1];
+                }
+                if(memory[pc + 1] >= 0x80)
+                {
+                pc = pc + memory[pc + 1];
+                pc = pc - 0x100;
+                }
             }
             if(Fbitbuffer[7] == 1)
             {
                 cycles += 8;
             }
+            pc +=2;
         break;
 
         case 0x21: // Flag Checked
@@ -583,23 +599,55 @@ int doOpcode()
             pc += 2;
         break;
 
-        case 0x27: // DAA.  Currently does nothing.
+        case 0x27: // DAA.  No idea if this works.
             pc++;
-            af[0] = 0x00;
+            beforeHcheck = af[0];
+            Fbitbuffer = af[1];
+            // note: assumes a is a uint8_t and wraps from 0xff to 0
+            if (Fbitbuffer[6] == 0)
+            {  // after an addition, adjust if (half-)carry occurred or if result is out of bounds
+                if (Fbitbuffer[4] == 1 || af[0] > 0x99) { af[0] += 0x60; Fbitbuffer[4] = 1; }
+                if (Fbitbuffer[5] == 1 || (af[0] & 0x0f) > 0x09) { af[0] += 0x6; }
+            }
+            else
+            {  // after a subtraction, only adjust if (half-)carry occurred
+                if (Fbitbuffer[4] == 1) { af[0] -= 0x60; }
+                if (Fbitbuffer[5] == 1) { af[0] -= 0x6; }
+            }
+            // these flags are always updated
+            if(af[0] == 0x00)
+            {
+                Fbitbuffer[7] = 1; // the usual z flag
+            }
+            if(af[0] != 0x00)
+            {
+                Fbitbuffer[7] = 0; // the usual z flag
+            }
+            Fbitbuffer[5] = 0; // h flag is always cleared
+            Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);
+            af[1] = Fbitbuffer.to_ulong();
         break;
 
         case 0x28: // Flag Checked
-            pc +=2;
             Fbitbuffer = af[1];
             if(Fbitbuffer[7] == 1)
             {
                 cycles += 8;
-                pc = pc + memory[pc - 1];
+                if(memory[pc + 1] <= 0x7F)
+                {
+                pc = pc + memory[pc + 1];
+                }
+                if(memory[pc + 1] >= 0x80)
+                {
+                pc = pc + memory[pc + 1];
+                pc = pc - 0x100;
+                }
             }
             if(Fbitbuffer[7] == 0)
             {
                 cycles += 8;
             }
+            pc += 2;
         break;
 
         case 0x29: // Flags need fixed
@@ -694,17 +742,25 @@ int doOpcode()
         break;
 
         case 0x30: // Flag Checked
-            pc +=2;
             Fbitbuffer = af[1];
             if(Fbitbuffer[4] == 0)
             {
                 cycles += 8;
-                pc = pc + memory[pc - 1];
+                if(memory[pc + 1] <= 0x7F)
+                {
+                pc = pc + memory[pc + 1];
+                }
+                if(memory[pc + 1] >= 0x80)
+                {
+                pc = pc + memory[pc + 1];
+                pc = pc - 0x100;
+                }
             }
             if(Fbitbuffer[4] == 1)
             {
                 cycles += 8;
             }
+            pc += 2;
         break;
 
         case 0x31: // Flag Checked
@@ -798,7 +854,15 @@ int doOpcode()
             Fbitbuffer = af[1];
             if(Fbitbuffer[4] == 1)
             {
-                pc = pc + memory[pc + 0x01];
+                if(memory[pc + 1] <= 0x7F)
+                {
+                pc = pc + memory[pc + 1];
+                }
+                if(memory[pc + 1] >= 0x80)
+                {
+                pc = pc + memory[pc + 1];
+                pc = pc - 0x100;
+                }
             }
             pc += 2;
             cycles += 8;
@@ -7520,7 +7584,7 @@ int doOpcode()
 
         case 0xE2: // Flag Checked
             help0xE2[0] = 0xFF;
-            help0xE2[1] = c;
+            help0xE2[1] = bc[1];
             help0xE2_2 = help0xE2[0] << 8 | help0xE2[1];
             memory[help0xE2_2] = af[0];
             pc++;
@@ -7705,7 +7769,14 @@ int doOpcode()
         break;
 
         case 0xF3: // DI (Disables Interupts)
-            Interrupts_Enabled = false;
+            interruptEnable = false;
+            MEMbitbuffer = memory[0xFFFF];
+            MEMbitbuffer[0] = 0;
+            MEMbitbuffer[1] = 0;
+            MEMbitbuffer[2] = 0;
+            MEMbitbuffer[3] = 0;
+            MEMbitbuffer[4] = 0;
+            memory[0xFFFF] = MEMbitbuffer.to_ulong();
             cycles += 4;
             pc++;
         break;
@@ -7837,6 +7908,7 @@ int doOpcode()
             MEMbitbuffer[3] = 1;
             MEMbitbuffer[4] = 1;
             memory[0xFFFF] = MEMbitbuffer.to_ulong();
+            interruptEnable = true;
             cycles += 4;
             pc++;
         break;
@@ -8093,6 +8165,7 @@ int gbPowerOn()
     memory[0xFF7D] = 0xFF;
     memory[0xFF7E] = 0xFF;
     memory[0xFF7F] = 0xFF;
+    memory[0xFFCE] = 0x00;
     memory[0xFFFF] = 0x00;
 
 if (doBios == true)
@@ -8118,11 +8191,11 @@ void init_memory()
     debugmeminit++;
     if(debugmeminit != 0x10000)
     {
-        if(debugmeminit >= 0xA000)
+        if(debugmeminit >= 0x10000)
         {
             memory[debugmeminit] = 0xFF;
         }
-        if(debugmeminit < 0xA000)
+        if(debugmeminit < 0x10000)
         {
             memory[debugmeminit] = 0x00;
         }

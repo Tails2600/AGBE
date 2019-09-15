@@ -58,6 +58,7 @@
 		<Unit filename="include.hpp" />
 		<Unit filename="interupts.hpp" />
 		<Unit filename="main.cpp" />
+		<Unit filename="mbc.hpp" />
 		<Unit filename="sound.hpp" />
 		<Unit filename="timers.hpp" />
 		<Extensions>
