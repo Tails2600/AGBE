@@ -12,7 +12,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-g" />
+					<Add option="-O3" />
 				</Compiler>
 			</Target>
 			<Target title="Debug Win i686">
@@ -50,6 +50,7 @@
 		</Compiler>
 		<Linker>
 			<Add option="-lSDL2" />
+			<Add option="-pthread" />
 		</Linker>
 		<Unit filename="controls.hpp" />
 		<Unit filename="cpu.h" />

@@ -47,17 +47,18 @@ int main(int argc, char** argv)
             return 1;
         }
         AGBE_window = SDL_CreateWindow("AGBE v0.2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 320, 288, SDL_WINDOW_RESIZABLE);
-        screenSurface = SDL_GetWindowSurface( AGBE_window );
+        SDL_Surface * titleSurface = SDL_LoadBMP("AGBE.bmp");
         renderer = SDL_CreateRenderer(AGBE_window, -1, SDL_RENDERER_ACCELERATED);
-        texture = SDL_CreateTexture(renderer,SDL_PIXELFORMAT_RGBA8888,SDL_TEXTUREACCESS_TARGET,160,144);
-        SDL_SetRenderDrawColor(renderer,0,0,255,255);
-        SDL_RenderClear(renderer);
+        SDL_Texture * texture = SDL_CreateTextureFromSurface(renderer, titleSurface);
+        //SDL_SetRenderDrawColor(renderer,0,0,255,255);
+
+        SDL_RenderCopy(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
         if (VRAMdebugwanted == true)
         {
             AGBE_VRAM_DEBUG = SDL_CreateWindow("VRAM", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 256, 384, SDL_WINDOW_RESIZABLE);
             VRAM_renderer = SDL_CreateRenderer(AGBE_VRAM_DEBUG, -1, SDL_RENDERER_ACCELERATED);
-            SDL_SetRenderDrawColor(VRAM_renderer,0,255,0,255);
+            SDL_SetRenderDrawColor(VRAM_renderer,0,0,0,255);
             SDL_RenderClear(VRAM_renderer);
             SDL_RenderPresent(VRAM_renderer);
         }
@@ -177,7 +178,7 @@ int main(int argc, char** argv)
     //printf("opcode: 0x%X\n",opcode);
     doOpcode(); // Runs 1 Opcode
     handleMBC();
-    //memory[0xFF00] = 0xCF;
+    //memory[0xFF00] = 0xCF;y
     //memory[0xFF80] = 0x80;
     lyhelp2 = cycles;
 
@@ -321,7 +322,6 @@ int main(int argc, char** argv)
     {
         goto close_the_program; // Goes to the operation that closes the program
     }
-
     goto test_for_sdl2; // End of SDL2 Loop
     close_the_program: // Program Jumps here if close_program is set to true.
     //printf("\nProgram Counter: 0x%X\n", pc);

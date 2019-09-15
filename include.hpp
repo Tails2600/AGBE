@@ -2,6 +2,8 @@
 #include <bits/stdc++.h>
 #include <stdio.h>
 #include <iostream>
+#include <string>
+#include <thread>
 // The Gameboy RAM
 char memory[0x10000];
 // Registers and Flags
@@ -16,7 +18,7 @@ bool ime;
 char tempROM[0x4000];
 FILE * tempROMfile;
 int MBCcountHelp;
-uint32_t bankSwitch;
+uint8_t bankSwitch;
 uint32_t romLocate;
 char tempROM2[16000000]; // 16 MB
 uint16_t MBCcount2;
@@ -251,6 +253,20 @@ int loopDetect() // Tries to detect if the game is in an Infinite Loop.  Not cur
 }
 
 bool mbcExist;
+
+char compareArray(char a[],char b[],int size)	{
+	int i;
+	for(i=0;i<size;i++){
+		if(a[i]!=b[i])
+			return a[i];
+	}
+	return 0xFF;
+}
+
+uint8_t resultCompare;
+std::string memoryString;
+std::string tempROMString;
+
 
 void otherThings() // Parts of code that I had no Idea where to put
 {

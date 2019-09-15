@@ -15,8 +15,9 @@ int handleMBC()
     tempROMfile = fopen(filename,"rb");
     fread(tempROM,0x4000,1,tempROMfile);
     fclose(tempROMfile);
-    MBCcountHelp = 0;
+    MBCcountHelp = 2000;
     mbcAgain:
+
     if(memory[MBCcountHelp] == tempROM[MBCcountHelp])
     {
         MBCcountHelp++;
@@ -30,12 +31,6 @@ int handleMBC()
     {
         bankSwitch = memory[MBCcountHelp];
         printf("\nbankSwitch: 0x%X\n",bankSwitch);
-            mem_dump = fopen ("log/memdump", "w+");
-            fwrite (memory , sizeof(char), sizeof(memory), mem_dump);
-            fclose (mem_dump);
-            mem_dump = fopen ("log/memdumptemp", "w+");
-            fwrite (tempROM , sizeof(char), sizeof(tempROM), mem_dump);
-            fclose (mem_dump);
         memory[MBCcountHelp] = tempROM[MBCcountHelp];
         romLocate = bankSwitch * 0x4000;
         MBCcount2 = 0x4000;
@@ -46,16 +41,16 @@ int handleMBC()
         }
         if(MBCcount2 != 0x8000) // Copy new Rom bank into RAM
         {
-            tempROMfile = fopen(filename,"rb");
-            fseek(tempROMfile,romLocate,SEEK_SET);
-            fread(memory + 0x4000,0x4000,1,tempROMfile);
-            fclose(tempROMfile);
-            printf("madeithere\n");
-            //memory[MBCcount2] = tempROM2[romLocate];
-           // MBCcount2++;
-           // romLocate++;
-            return true;
-            //goto mbcAgain2;
+            //tempROMfile = fopen(filename,"rb");
+            //fseek(tempROMfile,romLocate,SEEK_SET);
+            //fread(memory + 0x4000,0x4000,1,tempROMfile);
+            //fclose(tempROMfile);
+            //printf("madeithere\n");
+            memory[MBCcount2] = tempROM2[romLocate];
+            MBCcount2++;
+            romLocate++;
+            //return true;
+            goto mbcAgain2;
         }
     }
 }
