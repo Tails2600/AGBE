@@ -4,6 +4,7 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
+    interruptEnable = false;
     helperforHacks = false;
     AGBE_version[0] = 'A';
     AGBE_version[1] = 'l';
@@ -176,9 +177,10 @@ int main(int argc, char** argv)
     lyhelp1 = cycles;
     prev_pc = pc;
     //printf("opcode: 0x%X\n",opcode);
+    spbuffer = sp[0] << 8 | sp[1];
     doOpcode(); // Runs 1 Opcode
     handleMBC();
-    //memory[0xFF00] = 0xCF;y
+    //memory[0xFF00] = 0xCF;
     //memory[0xFF80] = 0x80;
     lyhelp2 = cycles;
 
@@ -201,6 +203,11 @@ int main(int argc, char** argv)
         }
     }
     //if(lyhelp1 <= 456 * lyhelp3 && lyhelp2 >= 456 * lyhelp3)
+    if(memory[0xFF02] == 0xFFFFFF81 && beforeFF01 != memory[0xFF01])
+    {
+        printf("%c",memory[0xFF01]);
+    }
+    beforeFF01 = memory[0xFF01];
     if(cycles % 456 == 0x00)
     {
         memory[0xFF44]++;
@@ -213,26 +220,19 @@ int main(int argc, char** argv)
     MEMbitbuffer = memory[0xFFFF]; // I forgot what this does.
     if(cycles % 240 <= 0x03 && cycles % 240 >= 0x00)
     {
-        memory[0xFF04]++; // I forgot what this does :p
+        memory[0xFF04]++; // Counter
     }
-    memory[0xFF85]++; // Hack to get tetris to the Title Screen.
+    //memory[0xFF85]++; // Hack to get tetris to the Title Screen.
     memory[0xFF41]++;
-    if(pc == 0x4ADE)
-    {
-       // advanced_debugging_enabled = true;
-    }
+
     if(gameHacks == true)
     {
-    processHacks();
+        processHacks();
     }
     //checkInterrupts();  // DOESN'T WORK
     //handleInterupts();  // Handles Interupts
     handle_controls();
     otherThings(); // Holds other random code
-    if(pc == 0x0038)
-    {
-        close_program = true;
-    }
     if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.
     {
         spbuffer = sp[0] << 8 | sp[1];
@@ -279,8 +279,6 @@ int main(int argc, char** argv)
             ofstream myfile("log/memdump");
             myfile.write((char *)memory,sizeof(memory));
             myfile.close();
-
-
         }
     }
     if (log_file_made == true)  // If User wants a log file, then this will write stuff to it.

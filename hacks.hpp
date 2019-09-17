@@ -149,5 +149,15 @@ if (Title4[0] == '2' && Title4[1] == '0' && Title4[2] == '4' && Title4[3] == '8'
     }
     memory[0xFF41]++;
 }
+if (Title4[0] == 'K' && Title4[1] == 'I' && Title4[2] == 'R' && Title4[3] == 'B') // Kirby Dream Land 1
+{
+    memory[0xFF91]++;
+    memory[0xFF91]++;
+    if(helperforHacks == false)
+    {
+        helperforHacks = true;
+        printf("Kirby's Dream Land 1 Hack Enabled.\n");
+    }
+}
 
 }

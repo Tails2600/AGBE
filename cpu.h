@@ -7788,6 +7788,7 @@ int doOpcode()
                 sp[0]--;
             }
             spbuffer = sp[0] << 8 | sp[1];
+
             memory[spbuffer] = af[0];
             sp[1]--;
             if(sp[1] == 0xFF)

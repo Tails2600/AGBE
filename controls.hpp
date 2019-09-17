@@ -13,7 +13,7 @@ int handle_controls3()
             mode0x8800 = true;
         break;
 
-
+        /*
         case SDLK_SPACE: // This is currently being used as a way to exit the program.
             //memory[0xFF00] = memory[0xFF00] + 0x04;
             printf("\npc: 0x%X",pc);
@@ -27,7 +27,7 @@ int handle_controls3()
             printf("\njoypad: 0x%X",memory[0xFF00]);
             close_program = true;
         break;
-
+        */
         }
 }
 

@@ -18,12 +18,14 @@ bool ime;
 char tempROM[0x4000];
 FILE * tempROMfile;
 int MBCcountHelp;
-uint8_t bankSwitch;
+uint8_t bankSwitch = 0x01;
 uint32_t romLocate;
 char tempROM2[16000000]; // 16 MB
 uint16_t MBCcount2;
 
 // Helper Variables
+int helpThing = 0x00;
+char beforeFF01;
 int64_t otherCounter;
 char *filename;
 unsigned short prev_pc;
@@ -286,6 +288,14 @@ void otherThings() // Parts of code that I had no Idea where to put
     fclose(rom);
     }
     noromwrite:
+    if(pc == 0xFFFF)
+    {
+        printf("PC HAS EXCEDED 0xFFFF.\nLOOPING TO BEGINNING.\n");
+    }
+    if(pc == 0x0038 && prev_pc == 0x0038)
+    {
+        printf("FF LOOP DETECTED.  \nTHIS LIKELY MEANS THE GAME HAS CRASHED.\n");
+    }
     // Handles FF40
     /*
     MEMbitbuffer = memory[0xFF40];
@@ -300,4 +310,9 @@ void otherThings() // Parts of code that I had no Idea where to put
     */
 
     dummyvalue++;
+}
+
+int handleEchoRAM()
+{
+
 }
