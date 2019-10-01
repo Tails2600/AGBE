@@ -1,9 +1,5 @@
 #include "include.hpp"
 
-
-
-
-
 int handleMBC()
 {
     if(memory[0x0147] == 0x00) // If the rom doesn't use an MBC, we just skip this entire function to save lag.
@@ -30,9 +26,13 @@ int handleMBC()
     if(memory[MBCcountHelp] != tempROM[MBCcountHelp] && MBCcountHelp > 0x1FFF && MBCcountHelp < 0x4000) // A Rom Bank Switch Occured
     {
         bankSwitch = memory[MBCcountHelp];
-        printf("\nbankSwitch: 0x%X\n",bankSwitch);
+        printf("\nbankSwitch: 0x%X",bankSwitch);
         memory[MBCcountHelp] = tempROM[MBCcountHelp];
         romLocate = bankSwitch * 0x4000;
+        if(bankSwitch == 0x00)
+        {
+            romLocate = 0x4000;
+        }
         MBCcount2 = 0x4000;
         mbcAgain2:
         if(MBCcount2 == 0x8000) // End function because ROM BANK has been successfully been copied to RAM.

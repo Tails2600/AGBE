@@ -4,7 +4,7 @@ int checkInterrupts()
 {
     //if(interruptEnable == true)
     //{
-        if(memory[0xFF44] == 0xFFFFFF90) //65664
+        if(cycles % 65664 * 4 == 0x00) //65664
         {
             MEMbitbuffer = memory[0xFF0F];
             MEMbitbuffer[0] = 1;
@@ -56,10 +56,38 @@ int checkInterrupts()
 
 int handleInterupts2()
 {
-
-
-
-
+   if(cycles % 65664 == 0x00)
+   {
+        MEMbitbuffer = memory[0xFF0F];
+        MEMbitbuffer[0] = 1;
+    }
+    MEMbitbuffer = memory[0xFF0F];
+    FFFFbitbuffer = memory[0xFFFF];
+    if(MEMbitbuffer[0] == 1 && FFFFbitbuffer[0] == 1)
+    {
+        MEMbitbuffer = memory[0xFF40];
+        if(MEMbitbuffer[7] == 1)
+        {
+            printf("VBLANK\n");
+            spbuffer2 = sp[0] << 8 | sp[1];
+            spbuffer2--;
+            pcbuffer1 = pc >> 8;
+            pcbuffer1 = pcbuffer1;
+            pcbuffer2 = pc;
+            memory[spbuffer2] = pcbuffer1;
+            spbuffer2--;
+            memory[spbuffer2] = pcbuffer2;
+            pc = 0x0040;
+            sp[1] -= 0x02;
+            if(sp[1] == 0xFF || sp[1] == 0xFE)
+            {
+                sp[0]--;
+            }
+            MEMbitbuffer = memory[0xFF0F];
+            MEMbitbuffer[0] = 0;
+            memory[0xFF0F] = MEMbitbuffer.to_ulong();
+        }
+    }
 
 }
 

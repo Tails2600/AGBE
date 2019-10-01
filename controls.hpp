@@ -5,6 +5,14 @@ int handle_controls3()
 {
     switch( SDL_EVENT_HANDLING.key.keysym.sym )
         {
+
+        case SDLK_m:
+            FILE * mem_dump;
+            mem_dump = fopen ("log/memdump", "w+");
+            fwrite (memory , sizeof(char), sizeof(memory), mem_dump);
+            fclose (mem_dump);
+        break;
+        /*
         case SDLK_o:
             mode0x8800 = false;
         break;
@@ -12,8 +20,7 @@ int handle_controls3()
         case SDLK_p:
             mode0x8800 = true;
         break;
-
-        /*
+        */
         case SDLK_SPACE: // This is currently being used as a way to exit the program.
             //memory[0xFF00] = memory[0xFF00] + 0x04;
             printf("\npc: 0x%X",pc);
@@ -25,9 +32,9 @@ int handle_controls3()
             printf("\nsp: 0x%X%X",sp[0],sp[1]);
             printf("\ncycles: %i",cycles);
             printf("\njoypad: 0x%X",memory[0xFF00]);
-            close_program = true;
+            //close_program = true;
         break;
-        */
+
         }
 }
 

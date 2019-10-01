@@ -22,7 +22,7 @@ int compare_pixels() // MAKE SURE BITSET_ID_COUNTER IS SET CORRECTLY BEFORE USIN
         setdrawcolor_white();
         compare_pixels_result = 0;
     }
-    if (MEMVRAMbitbuffer[bitset_id_counter] == 0 && MEMVRAMbitbuffer2[bitset_id_counter == 1])
+    if (MEMVRAMbitbuffer[bitset_id_counter] == 0 && MEMVRAMbitbuffer2[bitset_id_counter] == 1)
     {
         setdrawcolor_lightgrey();
         compare_pixels_result = 1;
@@ -43,7 +43,14 @@ void RenderTile(int xtile, int ytile)
     current_x_pixel = 8 * xtile;
     bitset_id_counter = 7;
     current_y_pixel = 8 * ytile;
-    current_tile_location = (0x9800 + (xtile * 0x01) + (ytile * 0x20));
+    if(bgDisplaySelect == false)
+    {
+       current_tile_location = (0x9800 + (xtile * 0x01) + (ytile * 0x20));
+    }
+    if(bgDisplaySelect == true)
+    {
+        current_tile_location = (0x9C00 + (xtile * 0x01) + (ytile * 0x20));
+    }
     if
     (
     current_tile_location == 0x9814 ||
@@ -92,7 +99,7 @@ void RenderTile(int xtile, int ytile)
     no0x8800:
     current_tile_data_location = (0x8000 + ((current_tile - 0xFFFFFF00) * 0x10));
     donetest0x8800:
-    if(current_tile_data_location > 0x9000 && help0x9000Render == true)
+    if(current_tile_data_location >= 0x9000 && help0x9000Render == true)
     {
         current_tile_data_location -= 0x1000;
     }
@@ -119,36 +126,79 @@ void RenderTile(int xtile, int ytile)
     dummyvalue++; // This is just here so the compiler doesn't complain about the last function being a goto related thing.
 }
 
-void RenderSprite2(uint8_t xcordi, uint8_t ycordi, uint16_t vramTile)
+void RenderSprite2(uint8_t xcordi, uint8_t ycordi, uint16_t vramTile, uint8_t flags)
 {
     currentOAMxpixel = xcordi;
     bitset_id_counter = 7;
     currentOAMypixel = ycordi;
-    currentOAMxpixel = currentOAMxpixel - 0x0F;
+    currentOAMxpixel = currentOAMxpixel - 0x08;
     currentOAMypixel = currentOAMypixel - 0x10;
 
     oamdataloc2 = (0x8000 + ((vramTile - 0xFFFFFF00) * 0x10));
 
-    if(oamdataloc2 > 0x9000)
+    if(oamdataloc2 >= 0x9000)
     {
         oamdataloc2 -= 0x1000;
     }
     //printf("OAMDATALOC2: 0x%X\n",oamdataloc2);
-    currentxBuffer = currentOAMxpixel + 0x08;
-    currentyBuffer = currentOAMypixel + 0x08;
+    MEMbitbuffer = flags;
+    if(MEMbitbuffer[5] == 1)
+    {
+        currentOAMxpixel = currentOAMxpixel + 0x07;
+        currentxBuffer = currentOAMxpixel - 0x08;
+    }
+    if(MEMbitbuffer[5] == 0)
+    {
+        currentxBuffer = currentOAMxpixel + 0x08;
+    }
+    if(MEMbitbuffer[6] == 1)
+    {
+        currentOAMypixel = currentOAMypixel + 0x07;
+        currentyBuffer = currentOAMypixel - 0x08;
+    }
+    if(MEMbitbuffer[6] == 0)
+    {
+        currentyBuffer = currentOAMypixel + 0x08;
+    }
     rendernewpixel:
     MEMVRAMbitbuffer = memory[oamdataloc2];
     MEMVRAMbitbuffer2 = memory[oamdataloc2 + 1];
     compare_pixels();
+    if(compare_pixels_result == 0 && MEMbitbuffer[7] == 0)
+    {
+        goto dontRenderPix;
+    }
     SDL_RenderDrawPoint(renderer,currentOAMxpixel,currentOAMypixel);
-    currentOAMxpixel++;
+    dontRenderPix:
+    if(MEMbitbuffer[5] == 1)
+    {
+        currentOAMxpixel--;
+    }
+    if(MEMbitbuffer[5] == 0)
+    {
+        currentOAMxpixel++;
+    }
     bitset_id_counter--;
 
     if (currentOAMxpixel == currentxBuffer) // Done Drawing Line
     {
-        currentOAMxpixel -= 8;
+        if(MEMbitbuffer[5] == 1)
+        {
+            currentOAMxpixel += 8;
+        }
+        if(MEMbitbuffer[5] == 0)
+        {
+            currentOAMxpixel -= 8;
+        }
         bitset_id_counter = 7;
-        currentOAMypixel++;
+        if(MEMbitbuffer[6] == 1)
+        {
+            currentOAMypixel--;
+        }
+        if(MEMbitbuffer[6] == 0)
+        {
+            currentOAMypixel++;
+        }
         oamdataloc2 += 0x02;
         if (currentOAMypixel == currentyBuffer) // Done Drawing Tile
         {
@@ -185,12 +235,12 @@ void RenderFrame()
     OAMhelp = memory[0xFF46];
     oamData = OAMhelp << 8 | 0x00;
     oamCounter = 0xA0;
-
     againSprite:
     OAMy = memory[oamData];
     OAMx = memory[oamData + 0x01];
     OAMtile = memory[oamData + 0x02];
-    RenderSprite2(OAMx,OAMy,OAMtile);
+    OAMflag = memory[oamData + 0x03];
+    RenderSprite2(OAMx,OAMy,OAMtile,OAMflag);
     oamData += 0x04;
     oamCounter -= 0x04;
     if(oamCounter == 0x00)
@@ -226,7 +276,8 @@ void RenderFrame()
     RenderSprite(0xC060);
     */
 
-    SDL_RenderPresent(renderer);
+    //SDL_RenderPresent(renderer);
+    dummyvalue++;
 }
 
 void setdrawcolor_VRAMwhite()
@@ -253,7 +304,7 @@ int compare_VRAMpixels() // MAKE SURE BITSET_ID_COUNTER IS SET CORRECTLY BEFORE 
         setdrawcolor_VRAMwhite();
         compare_pixels_result = 0;
     }
-    if (MEMVRAMbitbuffer[bitset_id_counter] == 0 && MEMVRAMbitbuffer2[bitset_id_counter == 1])
+    if (MEMVRAMbitbuffer[bitset_id_counter] == 0 && MEMVRAMbitbuffer2[bitset_id_counter] == 1)
     {
         setdrawcolor_VRAMlightgrey();
         compare_pixels_result = 1;
@@ -282,7 +333,7 @@ void RenderVRAMTile(int xtile, int ytile)
         help0x9000Render = true;
     }
     current_tile_data_location = 0x8000 + ((current_tile - 0xFFFFFF00) * 0x10);
-    if (current_tile_data_location > 0x9000 && help0x9000Render == true)
+    if (current_tile_data_location >= 0x9000 && help0x9000Render == true)
     {
         current_tile_data_location -= 0x1000;
     }
@@ -333,4 +384,25 @@ void RenderVRAMFrame()
     doneRenderingVRAMFrame:
     VRAMRenderhelp = false;
     SDL_RenderPresent(VRAM_renderer);
+}
+
+void renderThreadFrame()
+{
+    if(sdl_wanted == true) // Handles Rendering
+    {
+        SDL_RenderSetLogicalSize(renderer, 160,144);
+        SDL_RenderSetLogicalSize(VRAM_renderer, 128,192);
+        if(cycles % 10000 <= 0x02 && cycles % 10000 >= 0x00) // This is just set here so that things appear on the screen.
+        {
+        //printf("FF80: 0x%X\n",((memory[0xFF80] - 0xFFFFFF00) - 0x00000100));
+        //if(displayOn == true)
+        //{
+            RenderFrame(); // Renders a frame
+        //}
+        if (VRAMdebugwanted == true)
+            {
+                RenderVRAMFrame(); // Renders a frame in the VRAM Debugger
+            }
+        }
+    }
 }

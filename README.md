@@ -33,8 +33,6 @@ This will give you log files.
 Note that the Windows build could possibly be more buggy than the Linux build.  
 Not everything is implemented yet so don't expect everything to work correctly.  
 If there is a problem, bug, or suggetion, put it into Issues.  
-Ocassionally, because of the way I implemented input, the Hotkeys will randomly run, even if they are not pressed.  
-If this happens with the Space Key, this will exit the program.  
 ## Controls
 Up = Up Arrow  
 Down = Down Arrow  
@@ -45,6 +43,5 @@ Select = Backspace
 B = Left Ctrl  
 A = Left Alt  
 ## Hotkeys
-o = Swap to 0x8000 Tileset  
-p = Swap to 0x8800 Tileset  
-Space = End Program  
+m = Memdump
+Space = Display Debug Info

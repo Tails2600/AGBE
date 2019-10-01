@@ -6,20 +6,9 @@ int main(int argc, char** argv)
 {
     interruptEnable = false;
     helperforHacks = false;
-    AGBE_version[0] = 'A';
-    AGBE_version[1] = 'l';
-    AGBE_version[2] = 'p';
-    AGBE_version[3] = 'h';
-    AGBE_version[4] = 'a';
-    AGBE_version[5] = ' ';
-    AGBE_version[6] = 'v';
-    AGBE_version[7] = '0';
-    AGBE_version[8] = '.';
-    AGBE_version[9] = '2';
-    AGBE_version[10] = ' ';
-    AGBE_version[11] = ' ';
+    AGBE_version = "Alpha v0.2";
     mode0x8800 = false;
-    printf("Before we begin, do you want to enable SDL2? (y = yes, n = no)\nSDL2 is for Graphics and Input.\nOption: ");
+    printf("Would you like to enable SDL2? (y = yes, n = no)\nOption: ");
     cin>>choice;
     if (choice == 'y')
     {
@@ -39,9 +28,34 @@ int main(int argc, char** argv)
     {
         VRAMdebugwanted = false;
     }
+    /*
+    FILE* palletef = fopen("pallete.pal", "rb");
+    if(palletef != NULL)
+    {
+        fread(palletec,12,1,palletef);
+    fclose(palletef);
+    white[0] = palletec[0];
+    white[1] = palletec[1];
+    white[2] = palletec[2];
+    lightgrey[0] = palletec[3];
+    lightgrey[1] = palletec[4];
+    lightgrey[2] = palletec[5];
+    darkgrey[0] = palletec[6];
+    darkgrey[1] = palletec[7];
+    darkgrey[2] = palletec[8];
+    black[0] = palletec[9];
+    black[1] = palletec[10];
+    black[2] = palletec[11];
+    color_black = {black[0],black[1],black[2],black[3]}; // Black (3)
+    color_darkgrey = {darkgrey[0], darkgrey[1], darkgrey[2], darkgrey[3]}; // Dark Gray (2)
+    color_lightgrey = {lightgrey[0], lightgrey[1], lightgrey[2], lightgrey[3]}; // Light Grey (1)
+    color_white = {white[0],white[1],white[2],white[3]}; // White (0)
+    }
+    */
     init_memory();
     if (sdl_wanted == true)
     {
+
         if( SDL_Init( SDL_INIT_VIDEO ) < 0)
         {
             printf("SDL2 was Unable to Initialize!");
@@ -49,7 +63,7 @@ int main(int argc, char** argv)
         }
         AGBE_window = SDL_CreateWindow("AGBE v0.2", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 320, 288, SDL_WINDOW_RESIZABLE);
         SDL_Surface * titleSurface = SDL_LoadBMP("AGBE.bmp");
-        renderer = SDL_CreateRenderer(AGBE_window, -1, SDL_RENDERER_ACCELERATED);
+        renderer = SDL_CreateRenderer(AGBE_window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
         SDL_Texture * texture = SDL_CreateTextureFromSurface(renderer, titleSurface);
         //SDL_SetRenderDrawColor(renderer,0,0,255,255);
 
@@ -58,14 +72,21 @@ int main(int argc, char** argv)
         if (VRAMdebugwanted == true)
         {
             AGBE_VRAM_DEBUG = SDL_CreateWindow("VRAM", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 256, 384, SDL_WINDOW_RESIZABLE);
-            VRAM_renderer = SDL_CreateRenderer(AGBE_VRAM_DEBUG, -1, SDL_RENDERER_ACCELERATED);
+            VRAM_renderer = SDL_CreateRenderer(AGBE_VRAM_DEBUG, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
             SDL_SetRenderDrawColor(VRAM_renderer,0,0,0,255);
             SDL_RenderClear(VRAM_renderer);
             SDL_RenderPresent(VRAM_renderer);
+           // if( Mix_OpenAudio( 44100, MIX_DEFAULT_FORMAT, 2, 4096 ) == -1 )
+           // {
+           //     return false;
+           // }
+            //testingSound();
         }
     }
     welcometoagbe:
-    printf("Welcome to AGBE %s!\n",AGBE_version);
+    //std::thread framerate (framerateHandler);
+    printf("Welcome to AGBE ");
+    cout<<AGBE_version<<"!"<<endl;
     if(argv[1] == NULL)
     {
         char filename2temp[20];
@@ -96,7 +117,7 @@ int main(int argc, char** argv)
     }
     if (rom_size > 32768)
     {
-        printf("Rom Size is larger than 32768 Bytes!\nRom Size is %i Bytes!\nRom only partially loaded into RAM!",rom_size);
+        printf("Rom Size is larger than 32768 Bytes!\nRom Size is %i Bytes!\nRom only partially loaded into RAM!\nRom likely uses MBC.\n",rom_size);
         tempROMfile = fopen(filename,"rb");
         fread(tempROM2,rom_size,1,tempROMfile);
         fclose(tempROMfile);
@@ -178,30 +199,31 @@ int main(int argc, char** argv)
     prev_pc = pc;
     //printf("opcode: 0x%X\n",opcode);
     spbuffer = sp[0] << 8 | sp[1];
+    helpEA = 0x00000000;
     doOpcode(); // Runs 1 Opcode
+    //playSound();
     handleMBC();
     //memory[0xFF00] = 0xCF;
     //memory[0xFF80] = 0x80;
     lyhelp2 = cycles;
+    //antibreakpoint(0x20CB);
+    //breakpoint(0x000C);
 
     //if (cycles == 411512 && ime == true) //This setup is hacky and will be replaced in the future.
     //{
     //VBlank_Interupt_Needs_Done = true;
     //}
-    if(sdl_wanted == true) // Handles Rendering
+    renderThreadFrame();
+    if (cycles % 10000 == 0x00)
     {
-        SDL_RenderSetLogicalSize(renderer, 160,144);
-        SDL_RenderSetLogicalSize(VRAM_renderer, 128,192);
-        if(cycles % 10000 <= 0x03 && cycles % 10000 >= 0x00) // This is just set here so that things appear on the screen.
+        MEMbitbuffer = memory[0xFF40];
+        if(MEMbitbuffer[7] == 1)
         {
-        //printf("FF80: 0x%X\n",((memory[0xFF80] - 0xFFFFFF00) - 0x00000100));
-        RenderFrame(); // Renders a frame;
-        if (VRAMdebugwanted == true)
-            {
-                RenderVRAMFrame(); // Renders a frame in the VRAM Debugger
-            }
+            SDL_RenderPresent(renderer);
         }
     }
+
+
     //if(lyhelp1 <= 456 * lyhelp3 && lyhelp2 >= 456 * lyhelp3)
     if(memory[0xFF02] == 0xFFFFFF81 && beforeFF01 != memory[0xFF01])
     {
@@ -216,25 +238,29 @@ int main(int argc, char** argv)
         {
             memory[0xFF44] = 0x00;
         }
+        MEMbitbuffer = memory[0xFF40];
     }
     MEMbitbuffer = memory[0xFFFF]; // I forgot what this does.
     if(cycles % 240 <= 0x03 && cycles % 240 >= 0x00)
     {
         memory[0xFF04]++; // Counter
+        MEMbitbuffer = memory[0xFF40];
     }
+    breakpoint(0x2009);
     //memory[0xFF85]++; // Hack to get tetris to the Title Screen.
-    memory[0xFF41]++;
-
+    //memory[0xFF41]++;
+    //breakpoint(0x028A);
     if(gameHacks == true)
     {
         processHacks();
     }
     //checkInterrupts();  // DOESN'T WORK
-    //handleInterupts();  // Handles Interupts
+    //handleInterupts2();  // Handles Interupts
     handle_controls();
     otherThings(); // Holds other random code
     if (advanced_debugging_enabled == true) // If the user wants Advanced Debugging, this code will execute.
     {
+        advanAgain:
         spbuffer = sp[0] << 8 | sp[1];
         Fbitbuffer = af[1];
         printf("\nOpcode: 0x%X", opcode); // Does what it says.
@@ -256,6 +282,13 @@ int main(int argc, char** argv)
         if(choice == 'f')
         {
             advanced_debugging_enabled = false;
+        }
+        if(choice == 'm')
+        {
+            ofstream myfile("log/memdump");
+            myfile.write((char *)memory,sizeof(memory));
+            myfile.close();
+            goto advanAgain;
         }
         if(choice == 'n')
         {
