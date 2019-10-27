@@ -51,9 +51,12 @@
 		<Linker>
 			<Add option="-lSDL2" />
 			<Add option="-pthread" />
+			<Add option="-lSDL_mixer" />
 		</Linker>
 		<Unit filename="controls.hpp" />
 		<Unit filename="cpu.h" />
+		<Unit filename="fileopen.hpp" />
+		<Unit filename="framework.hpp" />
 		<Unit filename="graphics.hpp" />
 		<Unit filename="hacks.hpp" />
 		<Unit filename="include.hpp" />

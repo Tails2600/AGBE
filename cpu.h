@@ -1,12 +1,12 @@
 #include "controls.hpp"
 #include <time.h>
 /* Finished Opcodes
-Total:  499/500
-Main Opcodes: 243/244
+Total:  500/500
+Main Opcodes: 244/244
 CB Opcodes 256/256
 00 = 16/16   DONE
 10 = 16/16   DONE
-20 = 15/16   MISSING: 0x27
+20 = 15/16   DONE
 30 = 16/16   DONE
 40 = 16/16   DONE
 50 = 16/16   DONE
@@ -56,7 +56,7 @@ int doOpcode()
 
         case 0x02: // Flag Checked
             bcbuffer = bc[0] << 8 | bc[1];
-            memory[bcbuffer] = af[0];
+            memWrite(af[0],bcbuffer);
             pc++;
             cycles += 8;
         break;
@@ -122,11 +122,12 @@ int doOpcode()
             Abitbuffer = af[0];
             Carry_Helper[0] = Abitbuffer[7];
             Abitbuffer = Abitbuffer << 1;
+            Abitbuffer[0] = Carry_Helper[0];
             af[0] = Abitbuffer.to_ulong();
             Fbitbuffer = af[1];
             if(af[0] == 0x00)
             {
-                Fbitbuffer[7] = 1;
+                Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 0;
                 Fbitbuffer[5] = 0;
                 Fbitbuffer[4] = Carry_Helper[0];
@@ -145,8 +146,8 @@ int doOpcode()
 
         case 0x08: // Flag Checked
             membuffer = memory[pc + 2] << 8 | memory[pc + 1];
-            memory[membuffer] = sp[1];
-            memory[membuffer + 1] = sp[0];
+            memWrite(sp[1],membuffer);
+            memWrite(sp[0],membuffer + 1);
             pc += 3;
             cycles += 20;
         break;
@@ -160,8 +161,8 @@ int doOpcode()
             hl[0] = hlbuffer2 >> 8;
             hl[1] = hlbuffer2;
             Fbitbuffer[6] = 0;
-            Fbitbuffer[5] = halfcarrycheck16(beforeHcheck16,hlbuffer2);
-            Fbitbuffer[4] = overflowcheck(beforeHcheck16,hlbuffer2);
+            Fbitbuffer[5] = helpmehalfcarrycheck16(beforeHcheck16,hlbuffer3,hlbuffer2);
+            Fbitbuffer[4] = overflowcheck16(beforeHcheck16,hlbuffer2);
             af[1] = Fbitbuffer.to_ulong();
             pc++;
             cycles += 8;
@@ -236,11 +237,12 @@ int doOpcode()
             Abitbuffer = af[0];
             Carry_Helper[0] = Abitbuffer[0];
             Abitbuffer = Abitbuffer >> 1;
+            Abitbuffer[7] = Carry_Helper[0];
             af[0] = Abitbuffer.to_ulong();
             Fbitbuffer = af[1];
             if(af[0] == 0x00)
             {
-                Fbitbuffer[7] = 1;
+                Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 0;
                 Fbitbuffer[5] = 0;
                 Fbitbuffer[4] = Carry_Helper[0];
@@ -299,7 +301,7 @@ int doOpcode()
 
         case 0x12: // Flag Checked
             debuffer = de[0] << 8 | de[1];
-            memory[debuffer] = af[0];
+            memWrite(af[0],debuffer);
             pc++;
             cycles += 8;
         break;
@@ -374,14 +376,7 @@ int doOpcode()
             Fbitbuffer[5] = 0;
             Fbitbuffer[6] = 0;
             af[0] = Abitbuffer.to_ulong();
-            if(af[0] == 0x00)
-            {
-                Fbitbuffer[7] = 1;
-            }
-            if(af[0] != 0x00)
-            {
-                Fbitbuffer[7] = 0;
-            }
+            Fbitbuffer[7] = 0;
             af[1] = Fbitbuffer.to_ulong();
             pc++;
             cycles += 4;
@@ -403,15 +398,19 @@ int doOpcode()
         break;
 
         case 0x19: // Flags Need Fixed
-            hl[0] = hl[0] + de[0];
-            hl[1] = hl[1] + de[1];
-            if(hl[1] < de[1])
-            {
-                hl[0]++;
-            }
-            af[1] = 0x00;
-            cycles += 8;
+            Fbitbuffer = af[1];
+            hlbuffer2 = hl[0] << 8 | hl[1];
+            beforeHcheck16 = hlbuffer2;
+            hlbuffer3 = de[0] << 8 | de[1];
+            hlbuffer2 = hlbuffer2 + hlbuffer3;
+            hl[0] = hlbuffer2 >> 8;
+            hl[1] = hlbuffer2;
+            Fbitbuffer[6] = 0;
+            Fbitbuffer[5] = helpmehalfcarrycheck16(beforeHcheck16,hlbuffer3,hlbuffer2);
+            Fbitbuffer[4] = overflowcheck16(beforeHcheck16,hlbuffer2);
+            af[1] = Fbitbuffer.to_ulong();
             pc++;
+            cycles += 8;
         break;
 
         case 0x1A: // Flag Checked
@@ -459,16 +458,16 @@ int doOpcode()
             if(de[1] == 0x00)
             {
                 Fbitbuffer[7] = 1;
-                Fbitbuffer[6] = 0;
+                Fbitbuffer[6] = 1;
                 Fbitbuffer[5] = halfcarrycheck(beforeHcheck,de[1]);
             }
             if(de[1] != 0x00)
             {
                 Fbitbuffer[7] = 0;
-                Fbitbuffer[6] = 0;
+                Fbitbuffer[6] = 1;
                 Fbitbuffer[5] = halfcarrycheck(beforeHcheck,de[1]);
             }
-            Fbitbuffer = af[1];
+            af[1] = Fbitbuffer.to_ulong();
             pc++;
             cycles += 4;
         break;
@@ -482,12 +481,15 @@ int doOpcode()
         case 0x1F: // Flag Checked
             Abitbuffer = af[0];
             help0x1F[0] = Abitbuffer[0];
+            Fbitbuffer = af[1];
+            help0x1F2[0] = Fbitbuffer[4];
             Abitbuffer = Abitbuffer >> 1;
+            Abitbuffer[7] = help0x1F2[0];
             af[0] = Abitbuffer.to_ulong();
             if(af[0] == 0x00)
             {
                 Fbitbuffer = af[1];
-                Fbitbuffer[7] = 1;
+                Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 0;
                 Fbitbuffer[5] = 0;
                 Fbitbuffer[4] = help0x1F[0];
@@ -529,15 +531,15 @@ int doOpcode()
         break;
 
         case 0x21: // Flag Checked
-            hl[0] = memory[pc + 2];
-            hl[1] = memory[pc + 1];
+            hl[0] = (memory[pc + 2] - 0xFFFFFF00);
+            hl[1] = (memory[pc + 1] - 0xFFFFFF00);
             cycles += 12;
             pc += 3;
         break;
 
         case 0x22: // Flag Checked
             hlbuffer = hl[0] << 8 | hl[1];
-            memory[hlbuffer] = af[0];
+            memWrite(af[0],hlbuffer);
             hl[1]++;
             if (hl[1] == 0x00)
             {
@@ -585,13 +587,13 @@ int doOpcode()
             if(hl[0] == 0x00)
             {
                 Fbitbuffer[7] = 1;
-                Fbitbuffer[6] = 0;
+                Fbitbuffer[6] = 1;
                 Fbitbuffer[5] = halfcarrycheck(beforeHcheck,hl[0]);
             }
             if(hl[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
-                Fbitbuffer[6] = 0;
+                Fbitbuffer[6] = 1;
                 Fbitbuffer[5] = halfcarrycheck(beforeHcheck,hl[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
@@ -666,11 +668,17 @@ int doOpcode()
         break;
 
         case 0x29: // Flags need fixed
+            Fbitbuffer = af[1];
             hlbuffer2 = hl[0] << 8 | hl[1];
+            beforeHcheck16 = hlbuffer2;
             hlbuffer3 = hl[0] << 8 | hl[1];
             hlbuffer2 = hlbuffer2 + hlbuffer3;
             hl[0] = hlbuffer2 >> 8;
             hl[1] = hlbuffer2;
+            Fbitbuffer[6] = 0;
+            Fbitbuffer[5] = helpmehalfcarrycheck16(beforeHcheck16,hlbuffer3,hlbuffer2);
+            Fbitbuffer[4] = overflowcheck16(beforeHcheck16,hlbuffer2);
+            af[1] = Fbitbuffer.to_ulong();
             pc++;
             cycles += 8;
         break;
@@ -788,7 +796,7 @@ int doOpcode()
 
         case 0x32: // Flag Checked
             hlbuffer = hl[0] << 8 | hl[1];
-            memory[hlbuffer] = af[0];
+            memWrite(af[0],hlbuffer);
             hl[1]--;
             if(hl[1] == 0xFF)
             {
@@ -812,7 +820,7 @@ int doOpcode()
             Fbitbuffer = af[1];
             hlbuffer = hl[0] << 8 | hl[1];
             beforeHcheck = memory[hlbuffer];
-            memory[hlbuffer]++;
+            memIncrease(hlbuffer);
             if(memory[hlbuffer] == 0x00)
             {
                 Fbitbuffer[7] = 1;
@@ -833,7 +841,7 @@ int doOpcode()
         case 0x35: // Flag Checked
             nn = hl[0] << 8 | hl[1];
             beforeHcheck = memory[(nn - 0xFFFF0000)];
-            memory[(nn - 0xFFFF0000)]--;
+            memDecrease(nn - 0xFFFF0000);
             Fbitbuffer = af[1];
             if (memory[(nn - 0xFFFF0000)] == 0x00)
             {
@@ -852,7 +860,7 @@ int doOpcode()
 
         case 0x36: // Flag Checked
             hlbuffer = hl[0] << 8 | hl[1];
-            memory[hlbuffer] = memory[pc + 1];
+            memWrite((memory[pc + 1] - 0xFFFFFF00),hlbuffer);
             cycles += 12;
             pc += 2;
         break;
@@ -886,16 +894,16 @@ int doOpcode()
         break;
 
         case 0x39: // Flag Needs Fixed
+            Fbitbuffer = af[1];
             hlbuffer2 = hl[0] << 8 | hl[1];
-            spbuffer2 = sp[0] << 8 | sp[1];
             beforeHcheck16 = hlbuffer2;
-            hlbuffer2 = hlbuffer2 + spbuffer2;
+            hlbuffer3 = sp[0] << 8 | sp[1];
+            hlbuffer2 = hlbuffer2 + hlbuffer3;
             hl[0] = hlbuffer2 >> 8;
             hl[1] = hlbuffer2;
-            Fbitbuffer = af[1];
             Fbitbuffer[6] = 0;
-            Fbitbuffer[5] = halfcarrycheck16(beforeHcheck16,hlbuffer2);
-            Fbitbuffer[4] = overflowcheck(beforeHcheck16,hlbuffer2);
+            Fbitbuffer[5] = helpmehalfcarrycheck16(beforeHcheck16,hlbuffer3,hlbuffer2);
+            Fbitbuffer[4] = overflowcheck16(beforeHcheck16,hlbuffer2);
             af[1] = Fbitbuffer.to_ulong();
             pc++;
             cycles += 8;
@@ -1277,42 +1285,42 @@ int doOpcode()
 
         case 0x70: // Flag Checked
             hlbuffer = hl[0] << 8 | hl[1];
-            memory[hlbuffer] = bc[0];
+            memWrite(bc[0],hlbuffer);
             pc++;
             cycles += 8;
         break;
 
         case 0x71: // Flag Checked
             hlbuffer = hl[0] << 8 | hl[1];
-            memory[hlbuffer] = bc[1];
+            memWrite(bc[1],hlbuffer);
             pc++;
             cycles += 8;
         break;
 
         case 0x72: // Flag Checked
             hlbuffer = hl[0] << 8 | hl[1];
-            memory[hlbuffer] = de[0];
+            memWrite(de[0],hlbuffer);
             pc++;
             cycles += 8;
         break;
 
         case 0x73: // Flag Checked
             hlbuffer = hl[0] << 8 | hl[1];
-            memory[hlbuffer] = de[1];
+            memWrite(de[1],hlbuffer);
             pc++;
             cycles += 8;
         break;
 
         case 0x74: // Flag Checked
             hlbuffer = hl[0] << 8 | hl[1];
-            memory[hlbuffer] = hl[0];
+            memWrite(hl[0],hlbuffer);
             pc++;
             cycles += 8;
         break;
 
         case 0x75: // Flag Checked
             hlbuffer = hl[0] << 8 | hl[1];
-            memory[hlbuffer] = hl[1];
+            memWrite(hl[1],hlbuffer);
             pc++;
             cycles += 8;
         break;
@@ -1324,7 +1332,7 @@ int doOpcode()
 
         case 0x77: // Flag Checked
             hlbuffer = hl[0] << 8 | hl[1];
-            memory[hlbuffer] = af[0];
+            memWrite(af[0],hlbuffer);
             pc++;
             cycles += 8;
         break;
@@ -1386,14 +1394,14 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);  // Here, we are using beforeHcheck because there is no reason to use another variable when this one already has the value I want.
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],bc[0],beforeHcheck);
+                Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],bc[0],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
@@ -1409,14 +1417,14 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],bc[1],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);  // Here, we are using beforeHcheck because there is no reason to use another variable when this one already has the value I want.
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],bc[1],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
@@ -1432,14 +1440,14 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],de[0],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);  // Here, we are using beforeHcheck because there is no reason to use another variable when this one already has the value I want.
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],de[0],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
@@ -1455,14 +1463,14 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],de[1],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);  // Here, we are using beforeHcheck because there is no reason to use another variable when this one already has the value I want.
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],de[1],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
@@ -1478,19 +1486,20 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],hl[0],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);  // Here, we are using beforeHcheck because there is no reason to use another variable when this one already has the value I want.
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],hl[0],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
             cycles += 4;
+        break;
 
         case 0x85: // Flag Checked
             beforeHcheck = af[0];
@@ -1500,14 +1509,14 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],hl[1],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);  // Here, we are using beforeHcheck because there is no reason to use another variable when this one already has the value I want.
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],hl[1],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
@@ -1524,14 +1533,14 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],memory[hlbuffer],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);  // Here, we are using beforeHcheck because there is no reason to use another variable when this one already has the value I want.
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],memory[hlbuffer],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
@@ -1547,14 +1556,14 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(beforeHcheck,af[0],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);  // Here, we are using beforeHcheck because there is no reason to use another variable when this one already has the value I want.
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(beforeHcheck,af[0],beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
@@ -1578,14 +1587,14 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(beforeHcheck,bc[0],af[0]);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);
             }
             if (af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(beforeHcheck,bc[0],af[0]);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
@@ -1819,15 +1828,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(beforeHcheck,bc[0],af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(beforeHcheck,bc[0],af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -1842,15 +1851,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -1865,15 +1874,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -1888,15 +1897,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -1911,15 +1920,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -1934,15 +1943,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -1959,15 +1968,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -1982,15 +1991,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -2012,15 +2021,15 @@ int doOpcode()
         {
             Fbitbuffer[7] = 1;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         if(af[0] != 0x00)
         {
             Fbitbuffer[7] = 0;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         af[1] = Fbitbuffer.to_ulong();
         pc++;
@@ -2042,15 +2051,15 @@ int doOpcode()
         {
             Fbitbuffer[7] = 1;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         if(af[0] != 0x00)
         {
             Fbitbuffer[7] = 0;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         af[1] = Fbitbuffer.to_ulong();
         pc++;
@@ -2072,15 +2081,15 @@ int doOpcode()
         {
             Fbitbuffer[7] = 1;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         if(af[0] != 0x00)
         {
             Fbitbuffer[7] = 0;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         af[1] = Fbitbuffer.to_ulong();
         pc++;
@@ -2102,15 +2111,15 @@ int doOpcode()
         {
             Fbitbuffer[7] = 1;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         if(af[0] != 0x00)
         {
             Fbitbuffer[7] = 0;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         af[1] = Fbitbuffer.to_ulong();
         pc++;
@@ -2132,15 +2141,15 @@ int doOpcode()
         {
             Fbitbuffer[7] = 1;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         if(af[0] != 0x00)
         {
             Fbitbuffer[7] = 0;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         af[1] = Fbitbuffer.to_ulong();
         pc++;
@@ -2162,15 +2171,15 @@ int doOpcode()
         {
             Fbitbuffer[7] = 1;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         if(af[0] != 0x00)
         {
             Fbitbuffer[7] = 0;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         af[1] = Fbitbuffer.to_ulong();
         pc++;
@@ -2191,15 +2200,15 @@ int doOpcode()
         {
             Fbitbuffer[7] = 1;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         if(af[0] != 0x00)
         {
             Fbitbuffer[7] = 0;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         af[1] = Fbitbuffer.to_ulong();
         pc++;
@@ -2221,15 +2230,15 @@ int doOpcode()
         {
             Fbitbuffer[7] = 1;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         if(af[0] != 0x00)
         {
             Fbitbuffer[7] = 0;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         af[1] = Fbitbuffer.to_ulong();
         pc++;
@@ -2894,15 +2903,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             if(tem != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -2916,15 +2925,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             if(tem != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -2938,15 +2947,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             if(tem != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -2960,15 +2969,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             if(tem != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -2982,15 +2991,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             if(tem != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -3004,15 +3013,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             if(tem != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -3027,15 +3036,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             if(tem != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             af[1] = Fbitbuffer.to_ulong();
             cycles += 8;
@@ -3049,15 +3058,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             if(tem != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(af[0],tem);
-                Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
+                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[4] = negativeoverflowcheckinv(af[0],tem);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc++;
@@ -3158,14 +3167,14 @@ int doOpcode()
                 sp[0]--;
             }
             spbuffer = sp[0] << 8 | sp[1];
-            memory[spbuffer] = bc[0];
+            memWrite(bc[0],spbuffer);
             sp[1]--;
             if(sp[1] == 0xFF)
             {
                 sp[0]--;
             }
             spbuffer = sp[0] << 8 | sp[1];
-            memory[spbuffer] = bc[1];
+            memWrite(bc[1],spbuffer);
             pc++;
             cycles += 16;
         break;
@@ -3179,14 +3188,14 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],C6help,beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);  // Here, we are using beforeHcheck because there is no reason to use another variable when this one already has the value I want.
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 0;
-                Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],C6help,beforeHcheck);
                 Fbitbuffer[4] = overflowcheck(beforeHcheck,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
@@ -3241,9 +3250,9 @@ int doOpcode()
         break;
 
         case 0xC9: // Flag Checked
-            nn = sp[0] << 8 | sp[1];
-            help0xC92 = memory[nn - 0xFFFF0000];
-            help0xC9 = memory[(nn - 0xFFFF0000) + 1];
+            unn = sp[0] << 8 | sp[1];
+            help0xC92 = memory[unn];
+            help0xC9 = memory[(unn) + 1];
             pc = help0xC9 << 8 | help0xC92;
             sp[1] += 0x02;
             if(sp[1] == 0x00 || sp[1] == 0x01)
@@ -4810,6 +4819,7 @@ int doOpcode()
                     }
                     if(hl[1] != 0x00)
                     {
+                        Fbitbuffer[7] = 0;
                         Fbitbuffer[6] = 0;
                         Fbitbuffer[5] = 0;
                         Fbitbuffer[4] = Carry_Helper[0];
@@ -4866,6 +4876,7 @@ int doOpcode()
                     }
                     if(af[0] != 0x00)
                     {
+                        Fbitbuffer[7] = 0;
                         Fbitbuffer[6] = 0;
                         Fbitbuffer[5] = 0;
                         Fbitbuffer[4] = Carry_Helper[0];
@@ -6131,7 +6142,7 @@ int doOpcode()
                         Fbitbuffer[7] = 1;
                         Fbitbuffer[6] = 0;
                         Fbitbuffer[5] = 1;
-                    af[1] = Fbitbuffer.to_ulong();
+                        af[1] = Fbitbuffer.to_ulong();
                     }
                     if (MEMbitbuffer[7] == 1)
                     {
@@ -7242,15 +7253,17 @@ int doOpcode()
 
         case 0xCD: // Flag Checked
             help0xCD3 = (sp[0]);
-            nn = (help0xCD3 - 0xFFFFFF00) << 8 | (sp[1] - 0xFFFFFF00);
+            membuffer = (help0xCD3) << 8 | (sp[1]);
             help0xCD = (pc + 0x3) >> 8;
             help0xCD2 = (pc + 0x3);
-            memory[(nn - 0xFFFF0000) - 0x02] = (help0xCD2);
-            memory[(nn - 0xFFFF0000) - 0x01] = (help0xCD);
+            memWrite(help0xCD2,((membuffer - 0xFFFF0000) - 0x02));
+            memWrite(help0xCD,((membuffer - 0xFFFF0000) - 0x01));
+            //memory[(nn - 0xFFFF0000) - 0x02] = (help0xCD2);
+            //memory[(nn - 0xFFFF0000) - 0x01] = (help0xCD);
             opnn[0] = memory[pc + 2];
             opnn[1] = memory[pc + 1];
-            nn = (opnn[0]) << 8 | (opnn[1]);
-            help0xCD4 = (nn);
+            membuffer = (opnn[0]) << 8 | (opnn[1]);
+            help0xCD4 = (membuffer);
             pc = (help0xCD4);
             sp[1] -= 0x02;
             if(sp[1] == 0xFF || sp[1] == 0xFE)
@@ -7401,14 +7414,14 @@ int doOpcode()
                 sp[0]--;
             }
             spbuffer = sp[0] << 8 | sp[1];
-            memory[spbuffer] = de[0];
+            memWrite(de[0],spbuffer);
             sp[1]--;
             if(sp[1] == 0xFF)
             {
                 sp[0]--;
             }
             spbuffer = sp[0] << 8 | sp[1];
-            memory[spbuffer] = de[1];
+            memWrite(de[1],spbuffer);
             pc++;
             cycles += 16;
         break;
@@ -7421,15 +7434,15 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(tem,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(tem,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(tem,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(tem,af[0]);
             }
             if(af[0] != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheck(tem,af[0]);
-                Fbitbuffer[4] = negativeoverflowcheck(tem,af[0]);
+                Fbitbuffer[5] = halfcarrycheckinv(tem,af[0]);
+                Fbitbuffer[4] = negativeoverflowcheckinv(tem,af[0]);
             }
             af[1] = Fbitbuffer.to_ulong();
             pc += 2;
@@ -7483,6 +7496,7 @@ int doOpcode()
         break;
 
         case 0xD9: // Flag Checked
+            /*
             MEMbitbuffer = memory[0xFFFF];
             MEMbitbuffer[0] = 1;
             MEMbitbuffer[1] = 1;
@@ -7490,6 +7504,7 @@ int doOpcode()
             MEMbitbuffer[3] = 1;
             MEMbitbuffer[4] = 1;
             memory[0xFFFF] = MEMbitbuffer.to_ulong();
+            */
             interruptEnable = true;
             help0xE1 = sp[0] << 8 | sp[1];
             help0xD9[0] = memory[help0xE1 + 1];
@@ -7500,7 +7515,6 @@ int doOpcode()
             {
                 sp[0]++;
             }
-            ime = true;
             if (memory[0xFF0F] != 0x00)
             {
                 helpEI = 1;
@@ -7567,15 +7581,15 @@ int doOpcode()
         {
             Fbitbuffer[7] = 1;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         if(af[0] != 0x00)
         {
             Fbitbuffer[7] = 0;
             Fbitbuffer[6] = 1;
-            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,af[0]);
-            Fbitbuffer[4] = negativeoverflowcheck(beforeHcheck,af[0]);
+            Fbitbuffer[5] = halfcarrycheckinv(beforeHcheck,af[0]);
+            Fbitbuffer[4] = negativeoverflowcheckinv(beforeHcheck,af[0]);
         }
         af[1] = Fbitbuffer.to_ulong();
         pc += 2;
@@ -7610,9 +7624,9 @@ int doOpcode()
 
         case 0xE0: // Flag Checked
             help0xE0[0] = 0xFF;
-            help0xE0[1] = memory[pc + 1];
+            help0xE0[1] = memory[pc + 1] - 0xFFFFFF00;
             help0xE0_2 = help0xE0[0] << 8 | help0xE0[1];
-            memory[help0xE0_2] = af[0];
+            memWrite(af[0],help0xE0_2);
             pc += 2;
             cycles += 12;
         break;
@@ -7634,7 +7648,7 @@ int doOpcode()
             help0xE2[0] = 0xFF;
             help0xE2[1] = bc[1];
             help0xE2_2 = help0xE2[0] << 8 | help0xE2[1];
-            memory[help0xE2_2] = af[0];
+            memWrite(af[0],help0xE2_2);
             pc++;
             cycles += 8;
         break;
@@ -7646,14 +7660,14 @@ int doOpcode()
                 sp[0]--;
             }
             spbuffer = sp[0] << 8 | sp[1];
-            memory[spbuffer] = hl[0];
+            memWrite(hl[0],spbuffer);
             sp[1]--;
             if(sp[1] == 0xFF)
             {
                 sp[0]--;
             }
             spbuffer = sp[0] << 8 | sp[1];
-            memory[spbuffer] = hl[1];
+            memWrite(hl[1],spbuffer);
             pc++;
             cycles += 16;
         break;
@@ -7709,14 +7723,21 @@ int doOpcode()
         case 0xE8: // Flags Need Fixed
             Fbitbuffer = af[1];
             spbuffer2 = sp[0] << 8 | sp[1];
-            beforeHcheck16 = spbuffer2;
-            spbuffer2 = spbuffer2 + (memory[pc + 1] - 0xFFFFFF00);
-            sp[0] = spbuffer2 >> 8;
-            sp[1] = spbuffer2;
+            beforeHcheck = sp[1];
+            sp[1] = sp[1] + (memory[pc + 1] - 0xFFFFFF00);
+            if(sp[1] <= beforeHcheck && memory[pc + 1] != 0xFFFFFFFF)
+            {
+                sp[0]++;
+            }
+            if(beforeHcheck == 0x00 && memory[pc + 1] == 0xFFFFFFFF)
+            {
+                sp[0]--;
+            }
             Fbitbuffer[7] = 0;
             Fbitbuffer[6] = 0;
-            Fbitbuffer[5] = halfcarrycheck16(beforeHcheck16,spbuffer2);
-            Fbitbuffer[4] = overflowcheck(beforeHcheck16,spbuffer2);
+            Fbitbuffer[5] = helpmehalfcarrycheck(sp[1],(memory[pc + 1] - 0xFFFFFF00), beforeHcheck);
+            Fbitbuffer[4] = overflowcheck(beforeHcheck,sp[1]);
+            af[1] = Fbitbuffer.to_ulong();
             pc += 2;
             cycles += 16;
         break;
@@ -7734,7 +7755,7 @@ int doOpcode()
             helpEA3 = memory[pc + 1] - 0xFFFFFF00;
             helpEA = helpEA2 << 8 | helpEA3;
             //printf("membuffer: 0x%X\n",helpEA);
-            memory[helpEA] = af[0];
+            memWrite(af[0],helpEA);
             pc += 3;
             cycles += 16;
         break;
@@ -7789,9 +7810,9 @@ int doOpcode()
 
         case 0xF0: // Flag Checked
             help0xF0[0] = 0xFF;
-            help0xF0[1] = memory[pc + 1];
+            help0xF0[1] = (memory[pc + 1] - 0xFFFFFF00);
             help0xF0_2 = help0xF0[0] << 8 | help0xF0[1];
-            af[0] = memory[help0xF0_2];
+            af[0] = (memory[help0xF0_2] - 0xFFFFFF00);
             pc += 2;
             cycles += 12;
         break;
@@ -7817,6 +7838,7 @@ int doOpcode()
 
         case 0xF3: // DI (Disables Interupts)
             interruptEnable = false;
+            /*
             MEMbitbuffer = memory[0xFFFF];
             MEMbitbuffer[0] = 0;
             MEMbitbuffer[1] = 0;
@@ -7824,6 +7846,7 @@ int doOpcode()
             MEMbitbuffer[3] = 0;
             MEMbitbuffer[4] = 0;
             memory[0xFFFF] = MEMbitbuffer.to_ulong();
+            */
             cycles += 4;
             pc++;
         break;
@@ -7835,14 +7858,14 @@ int doOpcode()
                 sp[0]--;
             }
             spbuffer = sp[0] << 8 | sp[1];
-            memory[spbuffer] = af[0];
+            memWrite(af[0],spbuffer);
             sp[1]--;
             if(sp[1] == 0xFF)
             {
                 sp[0]--;
             }
             spbuffer = sp[0] << 8 | sp[1];
-            memory[spbuffer] = af[1];
+            memWrite(af[1],spbuffer);
             pc++;
             cycles += 16;
         break;
@@ -7911,23 +7934,46 @@ int doOpcode()
         break;
 
         case 0xF8: // Flags Need Fixed
-            hlbuffer2 = hl[0] << 8 | hl[1];
+            /*
             Fbitbuffer = af[1];
-            beforeHcheck16 = hlbuffer2;
+            beforeHcheck = hl[1];
             hl[0] = sp[0];
             hl[1] = sp[1];
-            hlbuffer2 = hl[0] << 8 | hl[1];
             helpF8 = memory[pc + 1];
-            hlbuffer2 = hlbuffer2 + helpF8;
-            hl[0] = hlbuffer2 >> 8;
-            hl[1] = hlbuffer2;
+            help0xF82 = hl[1] + helpF8;
+            if(help0xF82 <= 0x00FF)
+            {
+                hl[0]--;
+            }
+            hl[1] = hl[1] + helpF8;
             Fbitbuffer[7] = 0;
             Fbitbuffer[6] = 0;
-            Fbitbuffer[5] = halfcarrycheck16(beforeHcheck16,hlbuffer2);
-            Fbitbuffer[4] = overflowcheck(beforeHcheck16,hlbuffer2);
+            Fbitbuffer[5] = halfcarrycheck(beforeHcheck,hl[1]);
+            Fbitbuffer[4] = overflowcheck(beforeHcheck,hl[1]);
             af[1] = Fbitbuffer.to_ulong();
             pc += 2;
             cycles += 12;
+            */
+            Fbitbuffer = af[1];
+            spbuffer2 = sp[0] << 8 | sp[1];
+            beforeHcheck = sp[1];
+            hl[0] = sp[0];
+            hl[1] = sp[1] + (memory[pc + 1] - 0xFFFFFF00);
+            if(hl[1] <= beforeHcheck && memory[pc + 1] != 0xFFFFFFFF)
+            {
+                hl[0]++;
+            }
+            if(beforeHcheck == 0x00 && memory[pc + 1] == 0xFFFFFFFF)
+            {
+                hl[0]--;
+            }
+            Fbitbuffer[7] = 0;
+            Fbitbuffer[6] = 0;
+            Fbitbuffer[5] = helpmehalfcarrycheck(hl[1],(memory[pc + 1] - 0xFFFFFF00), beforeHcheck);
+            Fbitbuffer[4] = overflowcheck(beforeHcheck,hl[1]);
+            af[1] = Fbitbuffer.to_ulong();
+            pc += 2;
+            cycles += 16;
         break;
 
         case 0xF9: // Flag Checked
@@ -7938,18 +7984,31 @@ int doOpcode()
         break;
 
         case 0xFA: // Flag Checked
-            //printf("memory[pc+2]: 0x%X\n",memory[pc + 2]);
-            //printf("memory[pc+1]: 0x%X\n",memory[pc + 1]);
+            /*
+            printf("memory[pc+2]: 0x%X\n",memory[pc + 2]);
+            printf("memory[pc+1]: 0x%X\n",memory[pc + 1]);
             help0xFA = memory[pc + 2] - 0xFFFFFF00;
             help0xFA2 = memory[pc + 1] - 0xFFFFFF00;
-            nn = help0xFA << 8 | help0xFA2;
-            //printf("nn: 0x%X\n",nn);
-            af[0] = (memory[nn - 0xFFFF0000]);
+            printf("help0xFA2: 0x%X\n",help0xFA);
+            printf("help0xFA: 0x%X\n",help0xFA);
+            nn = (help0xFA - 0xFFFFFF00) << 8 | help0xFA2 - 0xFFFFFF00;
+            printf("nn: 0x%X\n",nn);
+            help0xFA3 = (memory[nn - 0xFFFF0000]);
+            af[0] = help0xFA3;
+            pc += 3;
+            cycles += 16;
+            */
+            help0xFA = memory[pc + 2] - 0xFFFFFF00;
+            help0xFA2 = memory[pc + 1] - 0xFFFFFF00;
+            help0xFA4 = help0xFA << 8 | help0xFA2;
+            help0xFA3 = memory[help0xFA4] - 0xFFFFFF00;
+            af[0] = help0xFA3;
             pc += 3;
             cycles += 16;
         break;
 
         case 0xFB: // EI (Enables Interupts)
+        /*
             MEMbitbuffer = memory[0xFFFF];
             MEMbitbuffer[0] = 1;
             MEMbitbuffer[1] = 1;
@@ -7957,7 +8016,8 @@ int doOpcode()
             MEMbitbuffer[3] = 1;
             MEMbitbuffer[4] = 1;
             memory[0xFFFF] = MEMbitbuffer.to_ulong();
-            interruptEnable = true;
+            */
+            handleEI = true;
             cycles += 4;
             pc++;
         break;
@@ -7970,16 +8030,17 @@ int doOpcode()
             {
                 Fbitbuffer[7] = 1;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],helpF8,tem);
                 Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
             }
             if(tem != 0x00)
             {
                 Fbitbuffer[7] = 0;
                 Fbitbuffer[6] = 1;
-                Fbitbuffer[5] = halfcarrycheckinv(af[0],tem);
+                Fbitbuffer[5] = helpmehalfcarrycheck(af[0],helpF8,tem);
                 Fbitbuffer[4] = negativeoverflowcheck(af[0],tem);
             }
+            Fbitbuffer.flip(5);
             af[1] = Fbitbuffer.to_ulong();
             cycles += 8;
             pc += 2;
@@ -7987,6 +8048,7 @@ int doOpcode()
 
         case 0xFF: // Flag Checked
             // Note: 0xEF2 has the First bit, while 0xEF has the second.
+            printf("pc: 0x%X\n",pc);
             pc++;
             backupPC0xEF = pc;
             help0xEF = pc; // to copy the first 8 bits.

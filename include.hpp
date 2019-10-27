@@ -4,8 +4,9 @@
 #include <iostream>
 #include <string>
 #include <thread>
-// The Gameboy RAM
 char memory[0x10000];
+uint64_t memChecksum;
+uint64_t memChecksuminit;
 // Registers and Flags
 unsigned short pc = 0x0100;
 unsigned char hl[2];
@@ -66,6 +67,7 @@ char e;
 char f;
 char h;
 char l;
+uint16_t help0xF82;
 char help0xE0[0x2];
 unsigned short help0xE0_2;
 char help0xF0[0x2];
@@ -79,11 +81,13 @@ uint8_t help0xCD3;
 unsigned short help0xCD4;
 uint8_t help0xC9;
 uint8_t help0xC92;
+uint16_t help0xC93;
 unsigned char help0xC94;
 std::bitset<1> help0x28;
 std::bitset<1> help0xC0;
 unsigned short help0x34;
 unsigned short help0xE1;
+uint8_t help0xFA3;
 uint8_t help0xD9[0x2];
 uint8_t help0xEF;
 uint8_t help0xEF2;
@@ -91,6 +95,7 @@ uint8_t help0xE8;
 uint8_t help9E;
 unsigned short backupPC0xEF;
 std::bitset<1> help0x1F;
+std::bitset<1> help0x1F2;
 std::bitset<1> MSB_Helper;
 std::bitset<1> Carry_Helper;
 std::bitset<1> Carry_Helper2;
@@ -106,8 +111,9 @@ uint8_t helpEA2;
 uint8_t helpEA3;
 char help0x18;
 int kirbyDEBUG = 0;
-uint8_t help0xFA;
-uint8_t help0xFA2;
+unsigned char help0xFA;
+unsigned char help0xFA2;
+uint16_t help0xFA4;
 // Variables that Store things like the Current Opcode being Executed
 unsigned char opcode;
 unsigned char previous_opcode;
@@ -115,6 +121,7 @@ unsigned char next_opcode;
 int64_t cycles;
 unsigned char opnn[2]; // JP
 int16_t nn = 0x00000000;
+uint16_t unn;
 // Variables that have Nothing to do with the Emulation of the Gameboy
 int rom_size;
 int bios_size;
@@ -178,7 +185,7 @@ bool thingforSDL2render;
 bool VRAMdebugwanted;
 bool help0x9000Render;
 bool mode0x8800;
-
+bool haltMode = false;
 int AGBEwinx = 160;
 int AGBEwiny = 144;
 int VRAMwinx = 128;
@@ -198,6 +205,7 @@ uint8_t currentOAMypixel;
 unsigned short oamdataloc2;
 bool interruptEnable = false;
 uint8_t oamCounter;
+bool doubleSprites = false;
 // SDL2 Color Palletes
 int white[4] = {0xFF,0xFF,0xFF,0x00};
 int lightgrey[4] = {0xC2,0xC2,0xC2,0x00};
@@ -213,24 +221,114 @@ SDL_Color color_white = {white[0],white[1],white[2],white[3]}; // White (0)
 
 
 // Other Functions
+bool handleEI;
 FILE * mem_dump;
 FILE * error_log;
 uint8_t helpF8;
 std::bitset<4> before;
 std::bitset<4> after;
+std::bitset<4> before2;
+std::bitset<4> after2;
 std::bitset<4> before16;
 std::bitset<4> after16;
 std::bitset<4> before162;
 std::bitset<4> after162;
 std::bitset<8> halfcarrycheck16help;
+std::bitset<8> Palbitbuffer;
 uint8_t halfcarrycheck16help2;
-unsigned char beforeHcheck;
+uint8_t beforeHcheck;
 unsigned short beforeHcheck16;
 
+int halfcarrycheckoverflowthing(uint16_t b, uint16_t a)
+{
+    b = b + a;
+    if(b >= 0x0100)
+    {
+        return 1;
+    }
+    if(b < 0x0100)
+    {
+        return 0;
+    }
+}
+int halfcarrycheck2(uint8_t b,uint8_t a)
+{
+    if((((a & 0xf) + (b & 0xf)) & 0x10) == 0x10)
+    {
+        return 1;
+    }
+    return 0;
+}
+int helpmehalfcarrycheck(uint8_t a,uint8_t b,uint8_t c)
+{
+    if(((a ^ b ^ c) & 0x10) == 0x10)
+    {
+        return 1;
+    }
+    return 0;
+}
+int helpmehalfcarrycheck16(uint16_t a,uint16_t b,uint16_t c)
+{
+    if(((a ^ b ^ c) & 0x1000) == 0x1000)
+    {
+        return 1;
+    }
+    return 0;
+}
+int helpmehalfcarrycheckinv(uint8_t a,uint8_t b,uint8_t c)
+{
+    if(((a ^ b ^ c) & 0x10) == 0x10)
+    {
+        return 0;
+    }
+    return 1;
+}
 int halfcarrycheck(uint8_t a,uint8_t b)
 {
     before = a >> 4;
     after = b >> 4;
+    before2 = a;
+    after2 = b;
+    if(before[0] != after[0]) // Here, bit 0 means bit 4
+    {
+        return 1; // Half Carry Happened.
+    }
+    if(before[0] == after[0]) // Here, bit 0 means bit 4
+    {
+        return 0; // Half Carry didn't happen.
+    }
+}
+
+int halfcarrycheckADD2(uint8_t a,uint8_t b,uint8_t c)
+{
+    before = a >> 4;
+    after = b >> 4;
+    if(halfcarrycheckoverflowthing(c,a) == 1);
+    {
+        return 1;
+    }
+    if(b == 0x00)
+    {
+        return 1;
+    }
+    if(before != after)
+    {
+        return 1; // Half Carry Happened.
+    }
+    if(before == after)
+    {
+        return 0; // Half Carry didn't happen.
+    }
+}
+
+int halfcarrycheckADD(uint8_t a,uint8_t b)
+{
+    before = a >> 4;
+    after = b >> 4;
+    if(a - 0x01 == b && b % 0x10 != 0x00)
+    {
+        return 1;
+    }
     if(before != after)
     {
         return 1; // Half Carry Happened.
@@ -254,20 +352,28 @@ int halfcarrycheckinv(uint8_t a,uint8_t b)
         return 1; // Half Carry didn't happen.
     }
 }
-
+uint8_t halfcarrycheck16help3;
+uint8_t halfcarrycheck16help4;
+uint8_t halfcarrycheck16help5;
 int halfcarrycheck16(uint16_t a,uint16_t b)
 {
     halfcarrycheck16help = b >> 8;
     halfcarrycheck16help2 = halfcarrycheck16help.to_ulong();
-    if(halfcarrycheck16help2 % 0x10 == 0x00 || halfcarrycheck16help2 == 0x00)
+    halfcarrycheck16help = a >> 8;
+    halfcarrycheck16help3 = halfcarrycheck16help.to_ulong();
+    halfcarrycheck16help4 = a;
+    halfcarrycheck16help5 = b;
+    if((halfcarrycheck16help2 % 0x10 == 0x00 && halfcarrycheck16help5 == 0x00) || (halfcarrycheck16help2 < halfcarrycheck16help3 && halfcarrycheck16help5 == 0x00))
     {
         return 1; // Half Carry Happened.
     }
-    if(halfcarrycheck16help2 % 0x10 != 0x00)
+    if(halfcarrycheck16help2 % 0x10 != 0x00 || halfcarrycheck16help5 != 0x00)
     {
         return 0; // Half Carry didn't happen.
     }
 }
+
+uint16_t overflowcheckhelp;
 
 int overflowcheck(uint8_t a,uint8_t b)
 {
@@ -280,6 +386,20 @@ int overflowcheck(uint8_t a,uint8_t b)
     if(b < a)
     {
     return 1;
+    }
+}
+
+int overflowcheckinv(uint8_t a,uint8_t b)
+{
+    before = a;
+    after = b;
+    if(b >= a)
+    {
+    return 1;
+    }
+    if(b < a)
+    {
+    return 0;
     }
 }
 
@@ -306,6 +426,20 @@ int negativeoverflowcheck(uint8_t a,uint8_t b)
     if(b < a)
     {
     return 0;
+    }
+}
+
+int negativeoverflowcheckinv(uint8_t a,uint8_t b)
+{
+    before = a >> 4;
+    after = b >> 4;
+    if(b >= a)
+    {
+    return 0;
+    }
+    if(b < a)
+    {
+    return 1;
     }
 }
 
@@ -390,6 +524,7 @@ void otherThings() // Parts of code that I had no Idea where to put
     if(pc == 0x0038 && prev_pc == 0x0038)
     {
         printf("FF LOOP DETECTED.  \nTHIS LIKELY MEANS THE GAME HAS CRASHED.\n");
+        close_program = true;
     }
     Fbitbuffer = af[1];
     Fbitbuffer[3] = 0;
@@ -434,6 +569,14 @@ void otherThings() // Parts of code that I had no Idea where to put
     if(MEMbitbuffer[3] == 0)
     {
         bgDisplaySelect = false;
+    }
+    if(MEMbitbuffer[2] == 1)
+    {
+        doubleSprites = true;
+    }
+    if(MEMbitbuffer[2] == 0)
+    {
+        doubleSprites = false;
     }
     if(MEMbitbuffer[1] == 1)
     {
@@ -555,4 +698,215 @@ void otherThings() // Parts of code that I had no Idea where to put
 int handleEchoRAM()
 {
 
+}
+bool help0xFF44;
+int handleHalt()
+{
+    if(haltMode == true)
+    {
+        FFFFbitbuffer = memory[0xFFFF];
+        FF0Fbitbuffer = memory[0xFF0F];
+        if(interruptEnable == true)
+        {
+            pc++;
+            //printf("VBLANK\n");
+            spbuffer2 = sp[0] << 8 | sp[1];
+            spbuffer2--;
+            pcbuffer1 = pc >> 8;
+            pcbuffer1 = pcbuffer1;
+            pcbuffer2 = pc;
+            memory[spbuffer2] = pcbuffer1;
+            spbuffer2--;
+            memory[spbuffer2] = pcbuffer2;
+            pc = 0x0040;
+            sp[1] -= 0x02;
+            if(sp[1] == 0xFF || sp[1] == 0xFE)
+            {
+                sp[0]--;
+            }
+            MEMbitbuffer = memory[0xFF0F];
+            MEMbitbuffer[0] = 0;
+            memory[0xFF0F] = MEMbitbuffer.to_ulong();
+            interruptEnable = false;
+        }
+    }
+}
+uint8_t mbcDetect;
+int detectMBC()
+{
+    mbcDetect = memory[0x0147];
+    std::cout<<"MBC ID is 0x";
+    printf("%X\n",mbcDetect);
+    if(mbcDetect == 0x00)
+    {
+        std::cout<<"MBC Type is NONE"<<std::endl;
+    }
+    if(mbcDetect == 0x01)
+    {
+        std::cout<<"MBC Type is MBC1"<<std::endl;
+    }
+    if(mbcDetect == 0x02)
+    {
+        std::cout<<"MBC Type is MBC1 + RAM"<<std::endl;
+    }
+    if(mbcDetect == 0x03)
+    {
+        std::cout<<"MBC Type is MBC1 + RAM + BATTERY"<<std::endl;
+    }
+    if(mbcDetect == 0x05)
+    {
+        std::cout<<"MBC Type is MBC2 + RAM"<<std::endl;
+    }
+    if(mbcDetect == 0x06)
+    {
+        std::cout<<"MBC Type is MBC2 + RAM + BATTERY"<<std::endl;
+    }
+    if(mbcDetect == 0x08)
+    {
+        std::cout<<"MBC Type is ROM + RAM"<<std::endl;
+    }
+    if(mbcDetect == 0x09)
+    {
+        std::cout<<"MBC Type is ROM + RAM + BATTERY"<<std::endl;
+    }
+    if(mbcDetect == 0x0B)
+    {
+        std::cout<<"MBC Type is MMM01"<<std::endl;
+    }
+    if(mbcDetect == 0x0C)
+    {
+        std::cout<<"MBC Type is MMM01 + RAM"<<std::endl;
+    }
+    if(mbcDetect == 0x0D)
+    {
+        std::cout<<"MBC Type is MMM01 + RAM + BATTERY"<<std::endl;
+    }
+    if(mbcDetect == 0x0F)
+    {
+        std::cout<<"MBC Type is MBC3 + BATTERY + TIMER"<<std::endl;
+    }
+    if(mbcDetect == 0x10)
+    {
+        std::cout<<"MBC Type is MBC3 + RAM + BATTERY + TIMER"<<std::endl;
+    }
+    if(mbcDetect == 0x11)
+    {
+        std::cout<<"MBC Type is MBC3"<<std::endl;
+    }
+    if(mbcDetect == 0x12)
+    {
+        std::cout<<"MBC Type is MBC3 + RAM"<<std::endl;
+    }
+    if(mbcDetect == 0x13)
+    {
+        std::cout<<"MBC Type is MBC3 + RAM + BATTERY"<<std::endl;
+    }
+    if(mbcDetect == 0x19)
+    {
+        std::cout<<"MBC Type is MBC5"<<std::endl;
+    }
+    if(mbcDetect == 0x1A)
+    {
+        std::cout<<"MBC Type is MBC5 + RAM"<<std::endl;
+    }
+    if(mbcDetect == 0x1B)
+    {
+        std::cout<<"MBC Type is MBC5 + RAM + BATTERY"<<std::endl;
+    }
+    if(mbcDetect == 0x1C)
+    {
+        std::cout<<"MBC Type is MBC5 + RUMBLE"<<std::endl;
+    }
+    if(mbcDetect == 0x1D)
+    {
+        std::cout<<"MBC Type is MBC5 + RAM + RUMBLE"<<std::endl;
+    }
+    if(mbcDetect == 0x1E)
+    {
+        std::cout<<"MBC Type is MBC5 + RAM + BATTERY + RUMBLE"<<std::endl;
+    }
+    if(mbcDetect == 0x22)
+    {
+        std::cout<<"MBC Type is MBC7 + RAM + BATTERY"<<std::endl;
+    }
+}
+int switchBank(uint8_t switchBanking)
+{
+        bankSwitch = switchBanking;
+        //printf("\nbankSwitch: 0x%X",bankSwitch);
+        romLocate = bankSwitch * 0x4000;
+        if(bankSwitch == 0x00)
+        {
+            romLocate = 0x4000;
+        }
+        tempROMfile = fopen(filename,"rb");
+        fseek(tempROMfile,romLocate,SEEK_SET);
+        fread(memory + 0x4000,0x4000,1,tempROMfile);
+        fclose(tempROMfile);
+}
+uint16_t location2;
+int memWrite(uint8_t writeValue, uint16_t location)
+{
+    if(location <= 0x3FFF && location >= 0x2000) // Rom Bank Switch (MBC1 - MBC3)
+    {
+       switchBank(writeValue);
+       return true;
+    }
+    if(location <= 0x7FFF)
+    {
+        return true;
+    }
+    if(location <= 0xDFFF && location >= 0xC000) // Echo Ram - Write to 0xC000 to 0xDFFF
+    {
+        memory[location] = writeValue;
+        location2 = location + 0x2000;
+        if(location2 >= 0xFE00)
+        {
+            return true;
+        }
+        memory[location2] = writeValue;
+        return true;
+    }
+    if(location <= 0xFDFF && location >= 0xE000) // Echo Ram - Write to 0xE000 to 0xFDFF
+    {
+        memory[location] = writeValue;
+        location2 = location - 0x2000;
+        memory[location2] = writeValue;
+        return true;
+    }
+    memory[location] = writeValue;
+    return true;
+}
+uint8_t incdechelp;
+int memIncrease(uint16_t location)
+{
+    if(location <= 0x3FFF && location >= 0x2000) // Rom Bank Switch (MBC1 - MBC3)
+    {
+        incdechelp = memory[location];
+        incdechelp++;
+        switchBank(incdechelp);
+        return true;
+    }
+    if(location <= 0x7FFF)
+    {
+        return true;
+    }
+    memory[location]++;
+    return true;
+}
+int memDecrease(uint16_t location)
+{
+    if(location <= 0x3FFF && location >= 0x2000) // Rom Bank Switch (MBC1 - MBC3)
+    {
+        incdechelp = memory[location];
+        incdechelp--;
+        switchBank(incdechelp);
+        return true;
+    }
+    if(location <= 0x7FFF)
+    {
+        return true;
+    }
+    memory[location]--;
+    return true;
 }

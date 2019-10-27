@@ -89,7 +89,9 @@ int handle_controls()
                 {
                 MEMbitbuffer[2] = 1;
                 }
+
             }
+
         break;
 
         case SDLK_DOWN:

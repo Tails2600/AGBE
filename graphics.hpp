@@ -15,6 +15,106 @@ void setdrawcolor_black()
 {
     SDL_SetRenderDrawColor(renderer,color_black.r,color_black.g,color_black.b,color_black.a);
 }
+int compare_bgp1pallete(uint8_t palthing)
+{
+    Palbitbuffer = memory[0xFF49];
+    if (Palbitbuffer[palthing] == 0 && Palbitbuffer[palthing + 1] == 0)
+    {
+        setdrawcolor_white();
+        return 0;
+    }
+    if (Palbitbuffer[palthing] == 0 && Palbitbuffer[palthing + 1] == 1)
+    {
+        setdrawcolor_lightgrey();
+        return 1;
+    }
+    if (Palbitbuffer[palthing] == 1 && Palbitbuffer[palthing + 1] == 0)
+    {
+        setdrawcolor_darkgrey();
+        return 2;
+    }
+    if (Palbitbuffer[palthing] == 1 && Palbitbuffer[palthing + 1] == 1)
+    {
+        setdrawcolor_black();
+        return 3;
+    }
+}
+int compare_bgp0pallete(uint8_t palthing)
+{
+    Palbitbuffer = memory[0xFF48];
+    if (Palbitbuffer[palthing] == 0 && Palbitbuffer[palthing + 1] == 0)
+    {
+        setdrawcolor_white();
+        return 0;
+    }
+    if (Palbitbuffer[palthing] == 0 && Palbitbuffer[palthing + 1] == 1)
+    {
+        setdrawcolor_lightgrey();
+        return 1;
+    }
+    if (Palbitbuffer[palthing] == 1 && Palbitbuffer[palthing + 1] == 0)
+    {
+        setdrawcolor_darkgrey();
+        return 2;
+    }
+    if (Palbitbuffer[palthing] == 1 && Palbitbuffer[palthing + 1] == 1)
+    {
+        setdrawcolor_black();
+        return 3;
+    }
+}
+int compare_pixels_2(uint8_t flags)
+{
+    MEMbitbuffer = flags;
+    if (MEMVRAMbitbuffer[bitset_id_counter] == 0 && MEMVRAMbitbuffer2[bitset_id_counter] == 0)
+    {
+        if(MEMbitbuffer[4] == 0)
+        {
+           compare_bgp0pallete(0);
+        }
+        if(MEMbitbuffer[4] == 1)
+        {
+           compare_bgp1pallete(0);
+        }
+        compare_pixels_result = 0;
+    }
+    if (MEMVRAMbitbuffer[bitset_id_counter] == 0 && MEMVRAMbitbuffer2[bitset_id_counter] == 1)
+    {
+        if(MEMbitbuffer[4] == 0)
+        {
+           compare_bgp0pallete(2);
+        }
+        if(MEMbitbuffer[4] == 1)
+        {
+           compare_bgp1pallete(2);
+        }
+        compare_pixels_result = 1;
+    }
+    if (MEMVRAMbitbuffer[bitset_id_counter] == 1 && MEMVRAMbitbuffer2[bitset_id_counter] == 0)
+    {
+        if(MEMbitbuffer[4] == 0)
+        {
+           compare_bgp0pallete(4);
+        }
+        if(MEMbitbuffer[4] == 1)
+        {
+           compare_bgp1pallete(4);
+        }
+        compare_pixels_result = 2;
+    }
+    if (MEMVRAMbitbuffer[bitset_id_counter] == 1 && MEMVRAMbitbuffer2[bitset_id_counter] == 1)
+    {
+        if(MEMbitbuffer[4] == 0)
+        {
+           compare_bgp0pallete(6);
+        }
+        if(MEMbitbuffer[4] == 1)
+        {
+           compare_bgp1pallete(6);
+        }
+        compare_pixels_result = 3;
+    }
+}
 int compare_pixels() // MAKE SURE BITSET_ID_COUNTER IS SET CORRECTLY BEFORE USING THIS.
 {
     if (MEMVRAMbitbuffer[bitset_id_counter] == 0 && MEMVRAMbitbuffer2[bitset_id_counter] == 0)
@@ -107,7 +207,7 @@ void RenderTile(int xtile, int ytile)
     MEMVRAMbitbuffer = memory[current_tile_data_location];
     MEMVRAMbitbuffer2 = memory[current_tile_data_location + 1];
     compare_pixels();
-    SDL_RenderDrawPoint(renderer,current_x_pixel,current_y_pixel);
+    SDL_RenderDrawPoint(renderer,current_x_pixel - (memory[0xFF43]),current_y_pixel - memory[0xFF42]);
     current_x_pixel++;
     bitset_id_counter--;
     if (current_x_pixel % 8 == 0) // Done Drawing Line
@@ -163,12 +263,14 @@ void RenderSprite2(uint8_t xcordi, uint8_t ycordi, uint16_t vramTile, uint8_t fl
     rendernewpixel:
     MEMVRAMbitbuffer = memory[oamdataloc2];
     MEMVRAMbitbuffer2 = memory[oamdataloc2 + 1];
-    compare_pixels();
+    compare_pixels_2(flags);
+
     if(compare_pixels_result == 0 && MEMbitbuffer[7] == 0)
     {
         goto dontRenderPix;
     }
     SDL_RenderDrawPoint(renderer,currentOAMxpixel,currentOAMypixel);
+
     dontRenderPix:
     if(MEMbitbuffer[5] == 1)
     {
@@ -215,17 +317,17 @@ void RenderFrame()
     current_x_tile = 0;
     current_y_tile = 0;
     renderNextTile:
-    if (current_x_tile < 21)
+    if (current_x_tile < 32)
     {
         RenderTile(current_x_tile,current_y_tile);
         current_x_tile++;
-        if (current_y_tile == 19)
+        if (current_y_tile == 32)
         {
             goto doneRenderingFrame;
         }
     goto renderNextTile;
     }
-    if (current_x_tile == 21)
+    if (current_x_tile == 32)
     {
         current_y_tile++;
         current_x_tile = 0;
@@ -241,6 +343,10 @@ void RenderFrame()
     OAMtile = memory[oamData + 0x02];
     OAMflag = memory[oamData + 0x03];
     RenderSprite2(OAMx,OAMy,OAMtile,OAMflag);
+    if(doubleSprites == true)
+    {
+        RenderSprite2(OAMx,OAMy + 8,OAMtile + 1,OAMflag);
+    }
     oamData += 0x04;
     oamCounter -= 0x04;
     if(oamCounter == 0x00)

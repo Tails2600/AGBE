@@ -55,7 +55,7 @@ if (Title4[0] == 'T' && Title4[1] == 'E' && Title4[2] == 'T' && Title4[3] == 'R'
     }
     tetrisCounter++;
 
-    if(pc == 0x036E)
+    if(pc == 0x036E && 0 == 1)
     {
         pc = 0x0371;
         //printf("VBLANK\n");
@@ -116,13 +116,76 @@ if (Title4[0] == 'T' && Title4[1] == 'E' && Title4[2] == 'N' && Title4[3] == 'N'
         memory[0xFF0F] = 0x00; // Note: if there is a bug where interupts are skipped, this is probably the line of code that would cause it.
         memory[0xFFFF] = 0x00;
     }
+    if(pc == 0x02DD)
+    {
+        pc = 0x02DE;
+        //printf("VBLANK\n");
+        ime = false;
+        Interupt_thing = false;
+        help0xCD3 = sp[0];
+        nn = help0xCD3 << 8 | sp[1];
+        help0xCD = (pc) >> 8;
+        help0xCD2 = (pc);
+        memory[(nn - 0xFFFF0000) - 0x02] = help0xCD2;
+        memory[(nn - 0xFFFF0000) - 0x01] = help0xCD;
+        pc = 0x0040;
+        sp[1] -= 0x02;
+        if(sp[1] == 0xFF || sp[1] == 0xFE)
+        {
+            sp[0] -= 0x01;
+        }
+        memory[0xFF0F] = 0x00; // Note: if there is a bug where interupts are skipped, this is probably the line of code that would cause it.
+        memory[0xFFFF] = 0x00;
+    }
+    if(pc == 0x03FF)
+    {
+        pc = 0x0400;
+        //printf("VBLANK\n");
+        ime = false;
+        Interupt_thing = false;
+        help0xCD3 = sp[0];
+        nn = help0xCD3 << 8 | sp[1];
+        help0xCD = (pc) >> 8;
+        help0xCD2 = (pc);
+        memory[(nn - 0xFFFF0000) - 0x02] = help0xCD2;
+        memory[(nn - 0xFFFF0000) - 0x01] = help0xCD;
+        pc = 0x0040;
+        sp[1] -= 0x02;
+        if(sp[1] == 0xFF || sp[1] == 0xFE)
+        {
+            sp[0] -= 0x01;
+        }
+        memory[0xFF0F] = 0x00; // Note: if there is a bug where interupts are skipped, this is probably the line of code that would cause it.
+        memory[0xFFFF] = 0x00;
+    }
+    if(pc == 0x039D)
+    {
+        pc = 0x039E;
+        //printf("VBLANK\n");
+        ime = false;
+        Interupt_thing = false;
+        help0xCD3 = sp[0];
+        nn = help0xCD3 << 8 | sp[1];
+        help0xCD = (pc) >> 8;
+        help0xCD2 = (pc);
+        memory[(nn - 0xFFFF0000) - 0x02] = help0xCD2;
+        memory[(nn - 0xFFFF0000) - 0x01] = help0xCD;
+        pc = 0x0040;
+        sp[1] -= 0x02;
+        if(sp[1] == 0xFF || sp[1] == 0xFE)
+        {
+            sp[0] -= 0x01;
+        }
+        memory[0xFF0F] = 0x00; // Note: if there is a bug where interupts are skipped, this is probably the line of code that would cause it.
+        memory[0xFFFF] = 0x00;
+    }
 }
 if (Title4[0] == 'K' && Title4[1] == 'I' && Title4[2] == 'R' && Title4[3] == 'B') // Kirby Dream Land 1
 {
     memory[0xFF91]++;
     memory[0xFF91]++;
-    /*
-    if(pc == 0x1E7E || pc == 0x1DC9)
+
+    if(pc == 0x1DC9)
     {
         printf("VBlank\n");
                 help0xCD3 = sp[0];
@@ -144,7 +207,6 @@ if (Title4[0] == 'K' && Title4[1] == 'I' && Title4[2] == 'R' && Title4[3] == 'B'
                 MEMbitbuffer[0] = 0;
                 memory[0xFF0F] = MEMbitbuffer.to_ulong();
     }
-    */
     if(helperforHacks == false)
     {
         helperforHacks = true;
@@ -153,37 +215,16 @@ if (Title4[0] == 'K' && Title4[1] == 'I' && Title4[2] == 'R' && Title4[3] == 'B'
 }
 if (Title4[0] == 'Z' && Title4[1] == 'E' && Title4[2] == 'L' && Title4[3] == 'D') // Lozla
 {
-    if(pc == 0x03D1)
-    {
-                pc = 0x03D3;
-                printf("VBlank\n");
-                help0xCD3 = sp[0];
-                nn = help0xCD3 << 8 | sp[1];
-                help0xCD = (pc) >> 8;
-                help0xCD2 = (pc);
-                memory[(nn - 0xFFFF0000) - 0x02] = help0xCD2;
-                memory[(nn - 0xFFFF0000) - 0x01] = help0xCD;
-                pc = 0x0040;
-                sp[1] -= 0x02;
-                if(sp[1] == 0xFF || sp[1] == 0xFE)
-                {
-                    sp[0] -= 0x01;
-                }
-                MEMbitbuffer = memory[0xFFFF];
-                MEMbitbuffer[0] = 0;
-                memory[0xFFFF] = MEMbitbuffer.to_ulong();
-                MEMbitbuffer = memory[0xFF0F];
-                MEMbitbuffer[0] = 0;
-                memory[0xFF0F] = MEMbitbuffer.to_ulong();
-    }
+    memory[0xFFD1]++;
     if(helperforHacks == false)
     {
         helperforHacks = true;
         printf("Link Awakening Hack Enabled.\n");
     }
 }
-if (Title4[0] == 'S' && Title4[1] == 'U' && Title4[2] == 'P' && Title4[3] == 'E') // Mario Land
+if (Title4[0] == 'M' && Title4[1] == 'A' && Title4[2] == 'R' && Title4[3] == 'I') // Mario Land
 {
+    /*
     if(pc == 0x0296)
     {
                 //printf("VBlank\n");
@@ -207,6 +248,8 @@ if (Title4[0] == 'S' && Title4[1] == 'U' && Title4[2] == 'P' && Title4[3] == 'E'
                 MEMbitbuffer[0] = 0;
                 memory[0xFF0F] = MEMbitbuffer.to_ulong();
     }
+    */
+    memory[0xFF82]++;
     if(helperforHacks == false)
     {
         helperforHacks = true;
@@ -271,6 +314,68 @@ if (Title4[0] == 'G' && Title4[1] == 'O' && Title4[2] == 'L' && Title4[3] == 'F'
     {
         helperforHacks = true;
         printf("Wario.\n");
+    }
+}
+if (Title4[0] == 'D' && Title4[1] == 'U' && Title4[2] == 'C' && Title4[3] == 'K') // Kirby Dream Land 1
+{
+    if(pc == 0x3731)
+    {
+        printf("VBlank\n");
+                help0xCD3 = sp[0];
+                nn = help0xCD3 << 8 | sp[1];
+                help0xCD = (pc) >> 8;
+                help0xCD2 = (pc);
+                memory[(nn - 0xFFFF0000) - 0x02] = help0xCD2;
+                memory[(nn - 0xFFFF0000) - 0x01] = help0xCD;
+                pc = 0x0040;
+                sp[1] -= 0x02;
+                if(sp[1] == 0xFF || sp[1] == 0xFE)
+                {
+                    sp[0] -= 0x01;
+                }
+                MEMbitbuffer = memory[0xFFFF];
+                MEMbitbuffer[0] = 0;
+                memory[0xFFFF] = MEMbitbuffer.to_ulong();
+                MEMbitbuffer = memory[0xFF0F];
+                MEMbitbuffer[0] = 0;
+                memory[0xFF0F] = MEMbitbuffer.to_ulong();
+                memory[0xFF91]++;
+    }
+    if(helperforHacks == false)
+    {
+        helperforHacks = true;
+        printf("Duck Hack Enabled.\n");
+    }
+}
+if (Title4[0] == 'P' && Title4[1] == 'O' && Title4[2] == 'K' && Title4[3] == 'E') // Pokemon Blue
+{
+    if(pc == 0x20B4)
+    {
+        printf("VBlank\n");
+                help0xCD3 = sp[0];
+                nn = help0xCD3 << 8 | sp[1];
+                help0xCD = (pc) >> 8;
+                help0xCD2 = (pc);
+                memory[(nn - 0xFFFF0000) - 0x02] = help0xCD2;
+                memory[(nn - 0xFFFF0000) - 0x01] = help0xCD;
+                pc = 0x0040;
+                sp[1] -= 0x02;
+                if(sp[1] == 0xFF || sp[1] == 0xFE)
+                {
+                    sp[0] -= 0x01;
+                }
+                MEMbitbuffer = memory[0xFFFF];
+                MEMbitbuffer[0] = 0;
+                memory[0xFFFF] = MEMbitbuffer.to_ulong();
+                MEMbitbuffer = memory[0xFF0F];
+                MEMbitbuffer[0] = 0;
+                memory[0xFF0F] = MEMbitbuffer.to_ulong();
+                memory[0xFF91]++;
+    }
+    if(helperforHacks == false)
+    {
+        helperforHacks = true;
+        printf("Pokemon Blue Hack Enabled.\n");
     }
 }
 }

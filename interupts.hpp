@@ -1,5 +1,42 @@
 #include "timers.hpp"
 
+int joypadInterrupt()
+{
+    MEMbitbuffer = memory[0xFF00];
+    if(MEMbitbuffer[0] == 0 || MEMbitbuffer[1] == 0 || MEMbitbuffer[2] == 0 || MEMbitbuffer[3] == 0)
+    {
+    MEMbitbuffer = memory[0xFF0F];
+    MEMbitbuffer[4] == 1;
+        if(MEMbitbuffer[4] == 1) // VBlank
+        {
+            MEMbitbuffer = memory[0xFFFF];
+            if(MEMbitbuffer[4] == 1 && interruptEnable == true)
+            {
+                //advanced_debugging_enabled = true;
+                printf("JoyPad\n");
+                help0xCD3 = sp[0];
+                nn = help0xCD3 << 8 | sp[1];
+                help0xCD = (pc) >> 8;
+                help0xCD2 = (pc);
+                memory[(nn - 0xFFFF0000) - 0x02] = help0xCD2;
+                memory[(nn - 0xFFFF0000) - 0x01] = help0xCD;
+                pc = 0x0040;
+                sp[1] -= 0x02;
+                if(sp[1] == 0xFF || sp[1] == 0xFE)
+                {
+                    sp[0] -= 0x01;
+                }
+                MEMbitbuffer = memory[0xFFFF];
+                MEMbitbuffer[0] = 0;
+                memory[0xFFFF] = MEMbitbuffer.to_ulong();
+                MEMbitbuffer = memory[0xFF0F];
+                MEMbitbuffer[0] = 0;
+                memory[0xFF0F] = MEMbitbuffer.to_ulong();
+            }
+        }
+    }
+}
+
 int checkInterrupts()
 {
     //if(interruptEnable == true)
@@ -54,41 +91,149 @@ int checkInterrupts()
     //}
 }
 
-int handleInterupts2()
+int handleVblank()
 {
-   if(cycles % 65664 == 0x00)
-   {
-        MEMbitbuffer = memory[0xFF0F];
-        MEMbitbuffer[0] = 1;
-    }
-    MEMbitbuffer = memory[0xFF0F];
-    FFFFbitbuffer = memory[0xFFFF];
-    if(MEMbitbuffer[0] == 1 && FFFFbitbuffer[0] == 1)
+    if(memory[0xFF44] == 0xFFFFFF91)
     {
-        MEMbitbuffer = memory[0xFF40];
-        if(MEMbitbuffer[7] == 1)
+        help0xFF44 = true;
+    }
+    if(memory[0xFF44] == 0xFFFFFF90 && help0xFF44 == true)
+    {
+        //MEMbitbuffer = memory[0xFF0F];
+        //MEMbitbuffer[0] = 1; //
+        //memory[0xFF0F] == MEMbitbuffer.to_ulong();
+        help0xFF44 = false;
+        memory[0xFF0F] = 0xE1;
+    }
+    if(cycles % 65664 == 0x00)
+    {
+        //MEMbitbuffer = memory[0xFF0F];
+        //MEMbitbuffer[0] = 1; //
+        //memory[0xFF0F] == MEMbitbuffer.to_ulong();
+        memory[0xFF0F] = 0xE1;
+    }
+    FFFFbitbuffer = memory[0xFFFF];
+    FF0Fbitbuffer = (memory[0xFF0F] - 0xFFFFFF00);
+    if(FFFFbitbuffer[0] == 1 && memory[0xFF0F] == 0xFFFFFFE1 && interruptEnable == true)
+    {
+        interruptEnable = false;
+        printf("VBLANK\n");
+        spbuffer2 = sp[0] << 8 | sp[1];
+        spbuffer2--;
+        pcbuffer1 = pc >> 8;
+        pcbuffer1 = pcbuffer1;
+        pcbuffer2 = pc;
+        memory[spbuffer2] = pcbuffer1;
+        spbuffer2--;
+        memory[spbuffer2] = pcbuffer2;
+        pc = 0x0040;
+        sp[1] -= 0x02;
+        if(sp[1] == 0xFF || sp[1] == 0xFE)
         {
-            printf("VBLANK\n");
-            spbuffer2 = sp[0] << 8 | sp[1];
-            spbuffer2--;
-            pcbuffer1 = pc >> 8;
-            pcbuffer1 = pcbuffer1;
-            pcbuffer2 = pc;
-            memory[spbuffer2] = pcbuffer1;
-            spbuffer2--;
-            memory[spbuffer2] = pcbuffer2;
-            pc = 0x0040;
-            sp[1] -= 0x02;
-            if(sp[1] == 0xFF || sp[1] == 0xFE)
-            {
-                sp[0]--;
-            }
-            MEMbitbuffer = memory[0xFF0F];
-            MEMbitbuffer[0] = 0;
-            memory[0xFF0F] = MEMbitbuffer.to_ulong();
+            sp[0]--;
+        }
+        MEMbitbuffer = memory[0xFF0F];
+        MEMbitbuffer[0] = 0;
+        memory[0xFF0F] = MEMbitbuffer.to_ulong();
+        renderThreadFrame();
+    }
+}
+
+int handleVblank2()
+{
+    if(memory[0xFF44] == 0xFFFFFF91)
+    {
+        help0xFF44 = true;
+    }
+    if(memory[0xFF44] == 0xFFFFFF90 && help0xFF44 == true)
+    {
+        //MEMbitbuffer = memory[0xFF0F];
+        //MEMbitbuffer[0] = 1; //
+        //memory[0xFF0F] == MEMbitbuffer.to_ulong();
+        help0xFF44 = false;
+        memory[0xFF0F] = 0xE1;
+    }
+    if(cycles % 65664 == 0x00)
+    {
+        //MEMbitbuffer = memory[0xFF0F];
+        //MEMbitbuffer[0] = 1; //
+        //memory[0xFF0F] == MEMbitbuffer.to_ulong();
+        memory[0xFF0F] = 0xE1;
+    }
+    FFFFbitbuffer = memory[0xFFFF];
+    FF0Fbitbuffer = (memory[0xFF0F] - 0xFFFFFF00);
+    if(FFFFbitbuffer[0] == 1 && FF0Fbitbuffer[0] == 1 && interruptEnable == true)
+    {
+        interruptEnable = false;
+        printf("VBLANK\n");
+        spbuffer2 = sp[0] << 8 | sp[1];
+        spbuffer2--;
+        pcbuffer1 = pc >> 8;
+        pcbuffer1 = pcbuffer1;
+        pcbuffer2 = pc;
+        memory[spbuffer2] = pcbuffer1;
+        spbuffer2--;
+        memory[spbuffer2] = pcbuffer2;
+        pc = 0x0040;
+        sp[1] -= 0x02;
+        if(sp[1] == 0xFF || sp[1] == 0xFE)
+        {
+            sp[0]--;
+        }
+        MEMbitbuffer = memory[0xFF0F];
+        MEMbitbuffer[0] = 0;
+        memory[0xFF0F] = MEMbitbuffer.to_ulong();
+        renderThreadFrame();
+    }
+}
+
+int handleLCDInt()
+{
+    MEMbitbuffer = memory[0xFF41] - 0xFFFFFF00;
+    if(MEMbitbuffer[6] == 1)
+    {
+        if(memory[0xFF44] == memory[0xFF45])
+        {
+            MEMbitbuffer[2] = 1;
         }
     }
+    if(MEMbitbuffer[2] == 1)
+    {
+        FF0Fbitbuffer = memory[0xFF0F] - 0xFFFFFF00;
+        FF0Fbitbuffer[1] = 1;
+        memory[0xFF0F] = FF0Fbitbuffer.to_ulong();
+    }
+    FFFFbitbuffer = memory[0xFFFF];
+    FF0Fbitbuffer = (memory[0xFF0F] - 0xFFFFFF00);
+    if(FFFFbitbuffer[1] == 1 && FF0Fbitbuffer[1] == 1 && interruptEnable == true && memory[0xFF44] == memory[0xFF45] && MEMbitbuffer[6] == 1 && MEMbitbuffer[2] == 1)
+    {
+        interruptEnable = false;
+        printf("LCD\n");
+        spbuffer2 = sp[0] << 8 | sp[1];
+        spbuffer2--;
+        pcbuffer1 = pc >> 8;
+        pcbuffer1 = pcbuffer1;
+        pcbuffer2 = pc;
+        memory[spbuffer2] = pcbuffer1;
+        spbuffer2--;
+        memory[spbuffer2] = pcbuffer2;
+        pc = 0x0048;
+        sp[1] -= 0x02;
+        if(sp[1] == 0xFF || sp[1] == 0xFE)
+        {
+            sp[0]--;
+        }
+        MEMbitbuffer = memory[0xFF0F];
+        MEMbitbuffer[1] = 0;
+        memory[0xFF0F] = MEMbitbuffer.to_ulong();
+    }
+}
 
+
+int handleInterupts2()
+{
+    handleLCDInt();
+    handleVblank2();
 }
 
 int handleInterupts() // Handles Interupts (Not Finished at all)

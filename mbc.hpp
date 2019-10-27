@@ -11,9 +11,22 @@ int handleMBC()
     tempROMfile = fopen(filename,"rb");
     fread(tempROM,0x4000,1,tempROMfile);
     fclose(tempROMfile);
-    MBCcountHelp = 2000;
+    MBCcountHelp = 0x2000;
     mbcAgain:
-
+    memChecksum += memory[MBCcountHelp];
+    MBCcountHelp++;
+    if(MBCcountHelp == 0x4000)
+    {
+        goto doneCheck;
+    }
+    goto mbcAgain;
+    doneCheck:
+    if(memChecksuminit == memChecksum)
+    {
+        return true;
+    }
+    MBCcountHelp = 0x2000;
+    mbcAgain3:
     if(memory[MBCcountHelp] == tempROM[MBCcountHelp])
     {
         MBCcountHelp++;
@@ -21,8 +34,9 @@ int handleMBC()
             {
                 return true;
             }
-        goto mbcAgain;
+        goto mbcAgain3;
     }
+
     if(memory[MBCcountHelp] != tempROM[MBCcountHelp] && MBCcountHelp > 0x1FFF && MBCcountHelp < 0x4000) // A Rom Bank Switch Occured
     {
         bankSwitch = memory[MBCcountHelp];
